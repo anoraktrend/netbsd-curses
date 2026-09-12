@@ -1,4 +1,4 @@
-/* $NetBSD: tic.c,v 1.40 2020/03/30 00:09:06 roy Exp $ */
+/* $NetBSD: tic.c,v 1.42 2024/05/20 14:41:37 christos Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2020 The NetBSD Foundation, Inc.
@@ -27,17 +27,19 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define _GNU_SOURCE
 #if HAVE_NBTOOL_CONFIG_H
 #include "nbtool_config.h"
 #endif
-#include <sys/stat.h>
+
+#include <sys/cdefs.h>
+__RCSID("$NetBSD: tic.c,v 1.42 2024/05/20 14:41:37 christos Exp $");
 
 #include <sys/types.h>
+#include <sys/queue.h>
 #include <sys/stat.h>
 
 #if !HAVE_NBTOOL_CONFIG_H || HAVE_SYS_ENDIAN_H
-#include <netbsd_sys/endian.h>
+#include <sys/endian.h>
 #endif
 
 #include <cdbw.h>
@@ -56,14 +58,7 @@
 #include <term_private.h>
 #include <term.h>
 #include <unistd.h>
-
-#include <netbsd_sys/cdefs.h>
-#include <netbsd_sys/emalloc.h>
-#include <netbsd_sys/queue.h>
-
-#ifndef DEFFILEMODE
-#define DEFFILEMODE  (S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)
-#endif
+#include <util.h>
 
 #define	HASH_SIZE	16384	/* 2012-06-01: 3600 entries */
 
@@ -473,7 +468,7 @@ merge_use(int flags)
 			if (!promoted && rtic->rtype != TERMINFO_RTYPE) {
 				if (promote(rtic, utic) == -1)
 					err(EXIT_FAILURE, "promote");
-				promoted = true;
+				promoted = rtic->rtype == TERMINFO_RTYPE;
 			}
 
 			merge(rtic, utic, flags);
@@ -578,6 +573,7 @@ write_database(const char *dbname)
 	char *tmp_dbname;
 	TERM *term;
 	int fd;
+	mode_t m;
 
 	db = cdbw_open();
 	if (db == NULL)
@@ -594,7 +590,9 @@ write_database(const char *dbname)
 	if (cdbw_output(db, fd, "NetBSD terminfo", cdbw_stable_seeder))
 		err(EXIT_FAILURE,
 		    "writing temporary database %s failed", tmp_dbname);
-	if (fchmod(fd, DEFFILEMODE))
+	m = umask(0);
+	(void)umask(m);
+	if (fchmod(fd, DEFFILEMODE & ~m))
 		err(EXIT_FAILURE, "fchmod failed");
 	if (close(fd))
 		err(EXIT_FAILURE,
@@ -645,7 +643,7 @@ main(int argc, char **argv)
 	    case '?': /* FALLTHROUGH */
 	    default:
 		    fprintf(stderr, "usage: %s [-acSsx] [-o file] source\n",
-			argv[0]);
+			getprogname());
 		    return EXIT_FAILURE;
 	    }
 
@@ -718,14 +716,12 @@ main(int argc, char **argv)
 		free(term->name);
 		free(term);
 	}
-#if 0
 #ifndef HAVE_NBTOOL_CONFIG_H
 	/*
 	 * hdestroy1 is not standard but we don't really care if we
 	 * leak in the tools version
 	 */
 	hdestroy1(free, NULL);
-#endif
 #endif
 
 	return EXIT_SUCCESS;

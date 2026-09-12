@@ -26,7 +26,8 @@
  *
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+__RCSID("$NetBSD: attributes.c,v 1.7 2003/03/09 01:08:47 lukem Exp $");
 
 #include <menu.h>
 

@@ -1,4 +1,4 @@
-/*	$NetBSD: timeout.c,v 1.9 2017/01/06 13:53:18 roy Exp $	*/
+/*	$NetBSD: timeout.c,v 1.10 2024/12/23 02:58:04 blymn Exp $	*/
 
 /*-
  * Copyright (c) 1999 The NetBSD Foundation, Inc.
@@ -29,7 +29,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+#ifndef lint
+__RCSID("$NetBSD: timeout.c,v 1.10 2024/12/23 02:58:04 blymn Exp $");
+#endif				/* not lint */
 
 #include "curses.h"
 #include "curses_private.h"
@@ -56,6 +59,9 @@ timeout(int delay)
 void
 wtimeout(WINDOW *win, int delay)
 {
+
+	if (__predict_false(win == NULL))
+		return;
 
 	if (delay < 0)
 		win->delay = -1;

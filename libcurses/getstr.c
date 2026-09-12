@@ -1,4 +1,4 @@
-/*	$NetBSD: getstr.c,v 1.27 2019/06/09 07:40:14 blymn Exp $	*/
+/*	$NetBSD: getstr.c,v 1.30 2024/12/23 02:58:03 blymn Exp $	*/
 
 /*
  * Copyright (c) 1981, 1993, 1994
@@ -30,7 +30,14 @@
  */
 
 #include <assert.h>
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+#ifndef lint
+#if 0
+static char sccsid[] = "@(#)getstr.c	8.2 (Berkeley) 5/4/94";
+#else
+__RCSID("$NetBSD: getstr.c,v 1.30 2024/12/23 02:58:03 blymn Exp $");
+#endif
+#endif				/* not lint */
 
 #include <ctype.h>
 #include "curses.h"
@@ -54,7 +61,7 @@ getnstr(char *str, int n)
  *	Get a string from stdscr starting at (cury, curx).
  */
 __warn_references(getstr,
-    "warning: this program uses getstr(), which is unsafe.");
+    "warning: this program uses getstr(), which is unsafe.")
 int
 getstr(char *str)
 {
@@ -76,7 +83,7 @@ mvgetnstr(int y, int x, char *str, int n)
  *      Get a string from stdscr starting at (y, x).
  */
 __warn_references(mvgetstr,
-    "warning: this program uses mvgetstr(), which is unsafe.");
+    "warning: this program uses mvgetstr(), which is unsafe.")
 int
 mvgetstr(int y, int x, char *str)
 {
@@ -102,7 +109,7 @@ mvwgetnstr(WINDOW *win, int y, int x, char *str, int n)
  *      Get a string from the given window starting at (y, x).
  */
 __warn_references(mvgetstr,
-    "warning: this program uses mvgetstr(), which is unsafe.");
+    "warning: this program uses mvgetstr(), which is unsafe.")
 int
 mvwgetstr(WINDOW *win, int y, int x, char *str)
 {
@@ -119,7 +126,7 @@ mvwgetstr(WINDOW *win, int y, int x, char *str)
  *	Get a string starting at (cury, curx).
  */
 __warn_references(wgetstr,
-    "warning: this program uses wgetstr(), which is unsafe.");
+    "warning: this program uses wgetstr(), which is unsafe.")
 int
 wgetstr(WINDOW *win, char *str)
 {
@@ -157,6 +164,9 @@ __wgetnstr(WINDOW *win, char *str, int n)
 	char *ostr, ec, kc;
 	int c, xpos, oldx, remain;
 
+	if (__predict_false(win == NULL))
+		return ERR;
+
 	ostr = str;
 	ec = erasechar();
 	kc = killchar();
@@ -165,11 +175,9 @@ __wgetnstr(WINDOW *win, char *str, int n)
 	remain = n - 1;
 
 	while ((c = wgetch(win)) != ERR && c != '\n' && c != '\r') {
-#ifdef DEBUG
 		__CTRACE(__CTRACE_INPUT,
 		    "__wgetnstr: win %p, char 0x%x, remain %d\n",
 		    win, c, remain);
-#endif
 		*str = c;
 		__touchline(win, win->cury, 0, (int) win->maxx - 1);
 		if (c == ec || c == KEY_BACKSPACE || c == KEY_LEFT) {

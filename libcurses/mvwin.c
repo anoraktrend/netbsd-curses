@@ -1,4 +1,4 @@
-/*	$NetBSD: mvwin.c,v 1.21 2017/01/11 20:43:03 roy Exp $	*/
+/*	$NetBSD: mvwin.c,v 1.25 2024/12/23 02:58:04 blymn Exp $	*/
 
 /*
  * Copyright (c) 1981, 1993, 1994
@@ -29,7 +29,14 @@
  * SUCH DAMAGE.
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+#ifndef lint
+#if 0
+static char sccsid[] = "@(#)mvwin.c	8.2 (Berkeley) 5/4/94";
+#else
+__RCSID("$NetBSD: mvwin.c,v 1.25 2024/12/23 02:58:04 blymn Exp $");
+#endif
+#endif				/* not lint */
 
 #include "curses.h"
 #include "curses_private.h"
@@ -48,7 +55,7 @@ mvderwin(WINDOW *win, int dy, int dx)
 	int x, i;
 	__LINE *plp;
 
-	if (win == NULL)
+	if (__predict_false(win == NULL))
 		return ERR;
 
 	parent = win->orig;
@@ -77,9 +84,9 @@ mvderwin(WINDOW *win, int dy, int dx)
 			*plp->firstchp = x;
 		if (*plp->lastchp < x + win->maxx)
 			*plp->lastchp = x + win->maxx;
-#ifdef DEBUG
-		__CTRACE(__CTRACE_REFRESH, "mvderwin: firstchp = %d, lastchp = %d\n", *plp->firstchp, *plp->lastchp);
-#endif
+		__CTRACE(__CTRACE_REFRESH,
+		    "mvderwin: firstchp = %d, lastchp = %d\n",
+		    *plp->firstchp, *plp->lastchp);
 	}
 
 	return OK;
@@ -94,6 +101,9 @@ mvwin(WINDOW *win, int by, int bx)
 {
 	WINDOW *orig;
 	int     dy, dx;
+
+	if (__predict_false(win == NULL))
+		return ERR;
 
 	if (by < 0 || by + win->maxy > win->screen->LINES ||
 	    bx < 0 || bx + win->maxx > win->screen->COLS)
@@ -119,6 +129,6 @@ mvwin(WINDOW *win, int by, int bx)
 		__swflags(win);
 		__set_subwin(orig, win);
 	}
-	__touchwin(win);
+	__touchwin(win, 0);
 	return OK;
 }

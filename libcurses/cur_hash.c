@@ -1,4 +1,4 @@
-/*	$NetBSD: cur_hash.c,v 1.13 2017/01/06 09:14:07 roy Exp $	*/
+/*	$NetBSD: cur_hash.c,v 1.15 2026/06/29 06:01:44 blymn Exp $	*/
 
 /*
  * Copyright (c) 1992, 1993
@@ -29,7 +29,14 @@
  * SUCH DAMAGE.
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+#ifndef lint
+#if 0
+static char sccsid[] = "@(#)cur_hash.c	8.1 (Berkeley) 6/4/93";
+#else
+__RCSID("$NetBSD: cur_hash.c,v 1.15 2026/06/29 06:01:44 blymn Exp $");
+#endif
+#endif				/* not lint */
 
 #include <sys/types.h>
 
@@ -39,20 +46,44 @@
 /*
  * __hash_more() is "hashpjw" from the Dragon Book, Aho, Sethi & Ullman, p.436.
  */
-unsigned int
-__hash_more(const void  *v_s, size_t len, unsigned int h)
+uint32_t
+__hash_more(const void  *v_s, size_t len, uint32_t h)
 {
-	unsigned int g;
+	uint32_t g;
 	size_t i = 0;
-	const char *s = v_s;
+	const unsigned char *s = v_s;
 
 	while (i < len) {
-		h = (h << 4) + s[i];
-		if ((g = h & 0xf0000000) != 0) {
-			h = h ^ (g >> 24);
-			h = h ^ g;
+		if (s[i] != 0) {
+			h = (h << 4) + s[i];
+			if ((g = h & 0xf0000000) != 0) {
+				h = h ^ (g >> 24);
+				h = h ^ g;
+			}
 		}
 		i++;
 	}
 	return h;
+}
+
+uint32_t
+__hash_line(const __LDATA *cp, int ncols)
+{
+#ifdef HAVE_WCHAR
+	uint32_t h;
+	const nschar_t *np;
+	int x;
+
+	h = 0;
+	for (x = 0; x < ncols; x++) {
+		h = __hash_more(&cp->ch, sizeof(cp->ch), h);
+		h = __hash_more(&cp->attr, sizeof(cp->attr), h);
+		for (np = cp->nsp; np != NULL; np = np->next)
+			h = __hash_more(&np->ch, sizeof(np->ch), h);
+		cp++;
+	}
+	return h;
+#else
+	return __hash(cp, (size_t)(ncols * __LDATASIZE));
+#endif
 }

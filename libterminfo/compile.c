@@ -27,19 +27,15 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#undef _GNU_SOURCE
-#define _GNU_SOURCE
-#undef _XOPEN_SOURCE
-#define _XOPEN_SOURCE 700
-
 #if HAVE_NBTOOL_CONFIG_H
 #include "nbtool_config.h"
 #endif
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+__RCSID("$NetBSD: compile.c,v 1.26 2020/06/21 15:05:23 roy Exp $");
 
 #if !HAVE_NBTOOL_CONFIG_H || HAVE_SYS_ENDIAN_H
-#include <netbsd_sys/endian.h>
+#include <sys/endian.h>
 #endif
 
 #include <assert.h>

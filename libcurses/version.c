@@ -1,4 +1,4 @@
-/*	$NetBSD: version.c,v 1.3 2019/09/03 13:43:34 roy Exp $	*/
+/*	$NetBSD: version.c,v 1.4 2021/09/06 02:50:43 rin Exp $	*/
 
 /*-
  * Copyright (c) 2019 The NetBSD Foundation, Inc.
@@ -29,8 +29,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CURSES_VERSION
-#define CURSES_VERSION "portable 0.3.2-git"
+#include <sys/cdefs.h>
+#ifndef lint
+__RCSID("$NetBSD: version.c,v 1.4 2021/09/06 02:50:43 rin Exp $");
 #endif
 
 #include "curses.h"
@@ -58,8 +59,8 @@
 #endif
 
 const char *
-curses_version()
+curses_version(void)
 {
 
-	return "NetBSD-Curses " _CURSES_VERSION;
+	return "NetBSD-Curses" _CURSES_VERSION;
 }

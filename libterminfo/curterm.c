@@ -27,7 +27,8 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+__RCSID("$NetBSD: curterm.c,v 1.14 2020/05/30 16:03:58 roy Exp $");
 
 #include <assert.h>
 #include <stdlib.h>
@@ -79,8 +80,7 @@ TERMINAL *
 set_curterm(TERMINAL *nterm)
 {
 	TERMINAL *oterm;
-	size_t l;
-	int n;
+	size_t l, n;
 	char *p;
 
 	oterm = cur_term;
@@ -99,21 +99,21 @@ set_curterm(TERMINAL *nterm)
 
 		p = ttytype;
 		l = sizeof(ttytype);
-		if ((n = snprintf(p, l, "%s", nterm->name)) < l) {
+		if ((n = strlcpy(p, nterm->name, l)) < l) {
 			p += n;
 			l -= n;
 			*p++ = '|';
 			l--;
-			if (nterm->_alias  &&
-				(n = snprintf(p, l, "%s", nterm->_alias)) < l)
+			if (nterm->_alias != NULL &&
+			    (n = strlcpy(p, nterm->_alias, l)) < l)
 			{
 				p += n;
 				l -= n;
 				*p++ = '|';
 				l--;
 			}
-			if (nterm->desc  &&
-				(n = snprintf(p, l, "%s", nterm->desc)) < l)
+			if (nterm->desc != NULL &&
+			    (n = strlcpy(p, nterm->desc, l)) < l)
 			{
 				p += n;
 				l -= n;

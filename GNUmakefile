@@ -43,7 +43,10 @@ STATIC_BINS=0
 endif
 
 CFLAGS+=-Werror-implicit-function-declaration
-CPPFLAGS+= -I. -I./libterminfo
+CPPFLAGS+= -I. -I./libterminfo -I./netbsd_sys
+CPPFLAGS+= -D_GNU_SOURCE -D_DEFAULT_SOURCE -D_BSD_SOURCE
+# Ensure our shims shadow system headers for portability
+CPPFLAGS+= -DHAVE_SYS_QUEUE_H=1 -DHAVE_SYS_ENDIAN_H=1
 
 TOOL_NBPERF=	nbperf/nbperf
 NBPERF_SRCS=	nbperf/nbperf.c
@@ -463,8 +466,11 @@ $(TOOL_TTIC): $(TIC_OBJS)
 	$(CC) $(LDFLAGS) $^ -o $@
 
 TERMINFODIR=./terminfo
+TERMINFO=$(TERMINFODIR)/terminfo
 SCRIPT_ENV=	\
 	TERMINFODIR=$(TERMINFODIR) \
+	TERMINFO=$(TERMINFO) \
+	NETBSDSRCDIR=. \
 	TOOL_AWK=awk \
 	TOOL_NBPERF=$(TOOL_NBPERF) \
 	TOOL_SED=sed \

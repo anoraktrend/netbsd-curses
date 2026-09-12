@@ -1,4 +1,4 @@
-/*	$NetBSD: initscr.c,v 1.35 2020/03/12 15:50:11 roy Exp $	*/
+/*	$NetBSD: initscr.c,v 1.36 2021/09/06 07:03:49 rin Exp $	*/
 
 /*
  * Copyright (c) 1981, 1993, 1994
@@ -29,7 +29,14 @@
  * SUCH DAMAGE.
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+#ifndef lint
+#if 0
+static char sccsid[] = "@(#)initscr.c	8.2 (Berkeley) 5/4/94";
+#else
+__RCSID("$NetBSD: initscr.c,v 1.36 2021/09/06 07:03:49 rin Exp $");
+#endif
+#endif	/* not lint */
 
 #include <stdlib.h>
 
@@ -46,9 +53,7 @@ initscr(void)
 {
 	const char *sp;
 
-#ifdef DEBUG
 	__CTRACE(__CTRACE_INIT, "initscr\n");
-#endif
 
 	/*
 	 * If My_term is set, or can't find a terminal in the environment,

@@ -29,7 +29,13 @@
  * SUCH DAMAGE.
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+#ifndef lint
+#if 0
+static char sccsid[] = "@(#)term.c	8.1 (Berkeley) 6/9/93";
+#endif
+__RCSID("$NetBSD: term.c,v 1.17 2011/09/06 18:34:12 joerg Exp $");
+#endif /* not lint */
 
 #include <sys/types.h>
 #include <err.h>
@@ -38,7 +44,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <term.h>
-//#include <ttyent.h>
+#include <ttyent.h>
 #include <unistd.h>
 #include "extern.h"
 
@@ -51,7 +57,9 @@ static const	char *askuser(const char *);
 const char *
 get_terminfo_entry(const char *userarg)
 {
+	struct ttyent *t;
 	int rval;
+	char *p, *ttypath;
 	const char *ttype;
 
 	if (userarg) {
@@ -62,10 +70,6 @@ get_terminfo_entry(const char *userarg)
 	/* Try the environment. */
 	if ((ttype = getenv("TERM")) != NULL)
 		goto map;
-
-#ifdef HAVE_GETTTYNAM
-	struct ttyent *t;
-	char *p, *ttypath;
 
 	/* Try ttyname(3); check for dialup or other mapping. */
 	if ((ttypath = ttyname(STDERR_FILENO)) != NULL) {
@@ -78,7 +82,7 @@ get_terminfo_entry(const char *userarg)
 			goto map;
 		}
 	}
-#endif
+
 	/* If still undefined, use "unknown". */
 	ttype = "unknown";
 

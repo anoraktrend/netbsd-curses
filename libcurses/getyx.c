@@ -1,4 +1,4 @@
-/*	$NetBSD: getyx.c,v 1.6 2017/01/06 13:53:18 roy Exp $	*/
+/*	$NetBSD: getyx.c,v 1.8 2024/12/23 02:58:03 blymn Exp $	*/
 
 /*
  * Copyright (c) 2000 The NetBSD Foundation, Inc.
@@ -29,7 +29,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+#ifndef lint
+__RCSID("$NetBSD: getyx.c,v 1.8 2024/12/23 02:58:03 blymn Exp $");
+#endif				/* not lint */
 
 #include <stdlib.h>
 
@@ -38,7 +41,7 @@
 
 /*
  * getpary --
- *      Get the y postion of the window relative to the parent window
+ *      Get the y position of the window relative to the parent window
  * return -1 if not a subwindow.
  */
 int
@@ -56,7 +59,7 @@ getpary(WINDOW *win)
 
 /*
  * getparx --
- *      Get the x postion of the window relative to the parent window
+ *      Get the x position of the window relative to the parent window
  * return -1 if not a subwindow.
  */
 int
@@ -80,6 +83,9 @@ int
 getcury(WINDOW *win)
 {
 
+	if (__predict_false(win == NULL))
+		return ERR;
+
 	return win->cury;
 }
 
@@ -90,6 +96,9 @@ getcury(WINDOW *win)
 int
 getcurx(WINDOW *win)
 {
+
+	if (__predict_false(win == NULL))
+		return ERR;
 
 	return win->curx;
 }
@@ -102,6 +111,9 @@ int
 getbegy(WINDOW *win)
 {
 
+	if (__predict_false(win == NULL))
+		return ERR;
+
 	return win->begy;
 }
 
@@ -112,6 +124,9 @@ getbegy(WINDOW *win)
 int
 getbegx(WINDOW *win)
 {
+
+	if (__predict_false(win == NULL))
+		return ERR;
 
 	return win->begx;
 }
@@ -124,6 +139,9 @@ int
 getmaxy(WINDOW *win)
 {
 
+	if (__predict_false(win == NULL))
+		return ERR;
+
 	return win->maxy;
 }
 
@@ -134,6 +152,9 @@ getmaxy(WINDOW *win)
 int
 getmaxx(WINDOW *win)
 {
+
+	if (__predict_false(win == NULL))
+		return ERR;
 
 	return win->maxx;
 }

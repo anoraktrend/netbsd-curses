@@ -1,4 +1,4 @@
-/*	$NetBSD: addchnstr.c,v 1.8 2019/06/09 07:40:14 blymn Exp $	*/
+/*	$NetBSD: addchnstr.c,v 1.10 2024/12/23 02:58:03 blymn Exp $	*/
 
 /*
  * Copyright (c) 2003 The NetBSD Foundation, Inc.
@@ -29,7 +29,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+#ifndef lint
+__RCSID("$NetBSD: addchnstr.c,v 1.10 2024/12/23 02:58:03 blymn Exp $");
+#endif				/* not lint */
 
 #include <stdlib.h>
 
@@ -134,10 +137,11 @@ waddchnstr(WINDOW *win, const chtype *chstr, int n)
 	char	*ocp, *cp, *start;
 	int i, ret, ox, oy;
 
-#ifdef DEBUG
 	__CTRACE(__CTRACE_INPUT, "waddchnstr: win = %p, chstr = %p, n = %d\n",
 	    win, chstr, n);
-#endif
+
+	if (__predict_false(win == NULL))
+		return ERR;
 
 	if (n >= 0)
 		for (chp = chstr, len = 0; n-- && *chp++; ++len);

@@ -1,4 +1,4 @@
-/*	$NetBSD: mouse.c,v 1.1 2020/03/23 13:37:36 roy Exp $	*/
+/*	$NetBSD: mouse.c,v 1.2 2024/12/23 02:58:04 blymn Exp $	*/
 
 /*-
  * Copyright (c) 2020 The NetBSD Foundation, Inc.
@@ -29,13 +29,22 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+#ifndef lint
+__RCSID("$NetBSD: mouse.c,v 1.2 2024/12/23 02:58:04 blymn Exp $");
+#endif				/* not lint */
 
 #include "curses.h"
 #include "curses_private.h"
 
+/* Local __unused to avoid polluting global headers (breaks uClibc/musl
+ * where <stdio.h> has a struct field named __unused). */
 #ifndef __unused
-#define __unused
+#if __GNUC__ >= 3
+#define __unused __attribute__((__unused__))
+#else
+#define __unused /* nothing */
+#endif
 #endif
 
 #define	DEFAULT_MAXCLICK	166	/* ncurses default */
@@ -46,6 +55,9 @@
 bool
 wenclose(const WINDOW *win, int y, int x)
 {
+
+	if (__predict_false(win == NULL))
+		return ERR;
 
 	if (y < win->begy || y > win->begy + win->maxy ||
 	    x < win->begx || x > win->begx + win->maxx)
@@ -66,6 +78,9 @@ mouse_trafo(int *y, int *x, bool to_screen)
 bool wmouse_trafo(const WINDOW *win, int *y, int *x, bool to_screen)
 {
 	int wy = *y, wx = *x;
+
+	if (__predict_false(win == NULL))
+		return ERR;
 
 	if (to_screen) {
 		wy += win->begy;

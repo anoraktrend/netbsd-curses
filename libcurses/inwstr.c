@@ -1,4 +1,4 @@
-/*   $NetBSD: inwstr.c,v 1.8 2019/06/09 07:40:14 blymn Exp $ */
+/*   $NetBSD: inwstr.c,v 1.11 2024/12/23 02:58:03 blymn Exp $ */
 
 /*
  * Copyright (c) 2005 The NetBSD Foundation Inc.
@@ -34,7 +34,10 @@
  * SUCH DAMAGE.
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+#ifndef lint
+__RCSID("$NetBSD: inwstr.c,v 1.11 2024/12/23 02:58:03 blymn Exp $");
+#endif						  /* not lint */
 
 #include "curses.h"
 #include "curses_private.h"
@@ -44,7 +47,7 @@
  *	Return a string of wide characters at cursor position from stdscr.
  */
 __warn_references(inwstr,
-	"warning: this program uses inwstr(), which is unsafe.");
+	"warning: this program uses inwstr(), which is unsafe.")
 int
 inwstr(wchar_t *wstr)
 {
@@ -62,7 +65,7 @@ innwstr(wchar_t *wstr, int n)
  *  Return a string of wide characters at position (y, x) from stdscr.
  */
 __warn_references(mvinwstr,
-	"warning: this program uses mvinwstr(), which is unsafe.");
+	"warning: this program uses mvinwstr(), which is unsafe.")
 int
 mvinwstr(int y, int x, wchar_t *wstr)
 {
@@ -80,7 +83,7 @@ mvinnwstr(int y, int x, wchar_t *wstr, int n)
  *  Return an array wide characters at position (y, x) from the given window.
  */
 __warn_references(mvwinwstr,
-	"warning: this program uses mvwinwstr(), which is unsafe.");
+	"warning: this program uses mvwinwstr(), which is unsafe.")
 int
 mvwinwstr(WINDOW *win, int y, int x, wchar_t *wstr)
 {
@@ -104,7 +107,7 @@ mvwinnwstr(WINDOW *win, int y, int x, wchar_t *wstr, int n)
  *	Return a string of wide characters at cursor position.
  */
 __warn_references(winwstr,
-	"warning: this program uses winwstr(), which is unsafe.");
+	"warning: this program uses winwstr(), which is unsafe.")
 int
 winwstr(WINDOW *win, wchar_t *wstr)
 {
@@ -128,12 +131,15 @@ winnwstr(WINDOW *win, wchar_t *wstr, int n)
 	int x, cw, cnt;
 	wchar_t *wcp;
 
+	if (__predict_false(win == NULL))
+		return ERR;
+
 	if (wstr == NULL)
 		return ERR;
 
 	start = &win->alines[win->cury]->line[win->curx];
 	x = win->curx;
-	cw = WCOL(*start);
+	cw = start->wcols;
 	if (cw < 0) {
 		start += cw;
 		x += cw;
@@ -142,7 +148,7 @@ winnwstr(WINDOW *win, wchar_t *wstr, int n)
 	wcp = wstr;
 	/* (n - 1) to leave room for the trailing 0 element */
 	while ((x < win->maxx) && ((n < 0) || ((n > 1) && (cnt < n - 1)))) {
-		cw = WCOL(*start);
+		cw = start->wcols;
 		*wcp = start->ch;
 		wcp++;
 		cnt++;

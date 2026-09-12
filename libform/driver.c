@@ -29,11 +29,10 @@
  *
  */
 
-#define _XOPEN_SOURCE 700
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+__RCSID("$NetBSD: driver.c,v 1.18 2013/11/26 01:17:00 christos Exp $");
 
 #include <ctype.h>
-#include <netbsd_sys/queue.h>
 #include "form.h"
 #include "internals.h"
 

@@ -1,4 +1,4 @@
-/*      $NetBSD: notimeout.c,v 1.7 2017/01/06 13:53:18 roy Exp $  */
+/*      $NetBSD: notimeout.c,v 1.8 2024/12/23 02:58:04 blymn Exp $  */
 
 /*-
  * Copyright (c) 1998-2014 Brett Lymn (blymn@netbsd.org)
@@ -26,7 +26,10 @@
  *
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+#ifndef lint
+__RCSID("$NetBSD: notimeout.c,v 1.8 2024/12/23 02:58:04 blymn Exp $");
+#endif				/* not lint */
 
 #include "curses.h"
 #include "curses_private.h"
@@ -39,6 +42,9 @@
 int
 notimeout(WINDOW *win, bool bf)
 {
+
+	if (__predict_false(win == NULL))
+		return ERR;
 
 	if (bf)
 		win->flags |= __NOTIMEOUT;

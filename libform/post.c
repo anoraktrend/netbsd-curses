@@ -29,7 +29,8 @@
  *
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+__RCSID("$NetBSD: post.c,v 1.10 2016/03/09 19:47:13 christos Exp $");
 
 #include "form.h"
 #include "internals.h"

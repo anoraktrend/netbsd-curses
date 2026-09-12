@@ -1,4 +1,4 @@
-/*	$NetBSD: erase.c,v 1.32 2020/03/15 01:18:43 uwe Exp $	*/
+/*	$NetBSD: erase.c,v 1.38 2024/12/23 02:58:03 blymn Exp $	*/
 
 /*
  * Copyright (c) 1981, 1993, 1994
@@ -29,7 +29,14 @@
  * SUCH DAMAGE.
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+#ifndef lint
+#if 0
+static char sccsid[] = "@(#)erase.c	8.2 (Berkeley) 5/4/94";
+#else
+__RCSID("$NetBSD: erase.c,v 1.38 2024/12/23 02:58:03 blymn Exp $");
+#endif
+#endif				/* not lint */
 
 #include <stdlib.h>
 
@@ -62,14 +69,12 @@ werase(WINDOW *win)
 	wchar_t	bch;
 	attr_t	battr;
 
-#ifdef DEBUG
 	__CTRACE(__CTRACE_ERASE, "werase: (%p)\n", win);
-#endif
-#ifdef HAVE_WCHAR
-	bch = (wchar_t)btowc((int)win->bch);
-#else
+
+	if (__predict_false(win == NULL))
+		return ERR;
+
 	bch = win->bch;
-#endif
 	if (win != curscr)
 		battr = win->battr & __ATTRIBUTES;
 	else
@@ -83,11 +88,13 @@ werase(WINDOW *win)
 				continue;
 
 			sp->ch = bch;
+			sp->cflags |= CA_BACKGROUND;
+			sp->cflags &= ~CA_CONTINUATION;
 			sp->attr = battr | (sp->attr & __ALTCHARSET);
 #ifdef HAVE_WCHAR
 			if (_cursesi_copy_nsp(win->bnsp, sp) == ERR)
 				return ERR;
-			SET_WCOL(*sp, 1);
+			sp->wcols = 1;
 #endif
 		}
 	}
@@ -96,7 +103,7 @@ werase(WINDOW *win)
 	 * Mark the whole window as changed in case we have overlapping
 	 * windows - this will result in the (intended) clearing of the
 	 * screen over the area covered by the window. */
-	__touchwin(win);
+	__touchwin(win, 0);
 	wmove(win, 0, 0);
 	return OK;
 }

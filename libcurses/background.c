@@ -1,4 +1,4 @@
-/*	$NetBSD: background.c,v 1.25 2018/11/19 20:37:04 uwe Exp $	*/
+/*	$NetBSD: background.c,v 1.34 2024/12/23 02:58:03 blymn Exp $	*/
 
 /*-
  * Copyright (c) 2000 The NetBSD Foundation, Inc.
@@ -29,8 +29,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define _XOPEN_SOURCE 700
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+#ifndef lint
+__RCSID("$NetBSD: background.c,v 1.34 2024/12/23 02:58:03 blymn Exp $");
+#endif				/* not lint */
 
 #include <stdlib.h>
 #include "curses.h"
@@ -64,10 +66,11 @@ bkgd(chtype ch)
 void
 wbkgdset(WINDOW *win, chtype ch)
 {
-#ifdef DEBUG
 	__CTRACE(__CTRACE_ATTR, "wbkgdset: (%p), '%s', %08x\n",
 	    win, unctrl(ch & __CHARTEXT), ch & __ATTRIBUTES);
-#endif
+
+	if (__predict_false(win == NULL))
+		return;
 
 	/* Background character. */
 	if (ch & __CHARTEXT)
@@ -87,14 +90,14 @@ wbkgdset(WINDOW *win, chtype ch)
 int
 wbkgd(WINDOW *win, chtype ch)
 {
-	chtype obch;
 	int y, x;
 
-#ifdef DEBUG
 	__CTRACE(__CTRACE_ATTR, "wbkgd: (%p), '%s', %08x\n",
 	    win, unctrl(ch & __CHARTEXT), ch & __ATTRIBUTES);
-#endif
-	obch = win->bch;
+
+	if (__predict_false(win == NULL))
+		return ERR;
+
 	wbkgdset(win, ch);
 
 	for (y = 0; y < win->maxy; y++) {
@@ -102,17 +105,17 @@ wbkgd(WINDOW *win, chtype ch)
 			__LDATA *cp = &win->alines[y]->line[x];
 
 			/* Update/switch background characters */
-			if (cp->ch == obch)
+			if (cp->cflags & CA_BACKGROUND)
 				cp->ch = win->bch;
 
 			/* Update/merge attributes */
 			cp->attr = win->battr | (cp->attr & __ALTCHARSET);
 #ifdef HAVE_WCHAR
-			SET_WCOL(*cp, 1);
+			cp->wcols = 1;
 #endif
 		}
 	}
-	__touchwin(win);
+	__touchwin(win, 1);
 	return OK;
 }
 
@@ -124,6 +127,9 @@ chtype
 getbkgd(WINDOW *win)
 {
 	attr_t	battr;
+
+	if (__predict_false(win == NULL))
+		return ERR;
 
 	/* Background attributes (check colour). */
 	battr = win->battr & A_ATTRIBUTES;
@@ -162,16 +168,27 @@ wbkgrndset(WINDOW *win, const cchar_t *wch)
 {
 	attr_t battr;
 	nschar_t *np, *tnp;
-	int i;
+	int i, wy, wx;
+	__LDATA obkgrnd, nbkgrnd;
+	__LINE *wlp;
 
-#ifdef DEBUG
 	__CTRACE(__CTRACE_ATTR, "wbkgrndset: (%p), '%s', %x\n",
-		win, (const char *) wunctrl(wch), wch->attributes);
-#endif
+	    win, (const char *)wunctrl(wch), wch->attributes);
+
+	if (__predict_false(win == NULL))
+		return;
 
 	/* ignore multi-column characters */
 	if (!wch->elements || wcwidth(wch->vals[0]) > 1)
 		return;
+
+	/* get a copy of the old background, we will need it. */
+	obkgrnd.ch = win->bch;
+	obkgrnd.attr = win->battr;
+	obkgrnd.cflags = CA_BACKGROUND;
+	obkgrnd.wcols = win->wcols;
+	obkgrnd.nsp = NULL;
+	_cursesi_copy_nsp(win->bnsp, &obkgrnd);
 
 	/* Background character. */
 	tnp = np = win->bnsp;
@@ -208,35 +225,59 @@ wbkgrndset(WINDOW *win, const cchar_t *wch)
 		}
 	}
 	/* clear the old non-spacing characters */
-	while (np) {
-		tnp = np->next;
-		free(np);
-		np = tnp;
-	}
+	__cursesi_free_nsp(np);
 
 	/* Background attributes (check colour). */
 	battr = wch->attributes & WA_ATTRIBUTES;
 	if (__using_color && !( battr & __COLOR))
 		battr |= __default_color;
 	win->battr = battr;
-	SET_BGWCOL((*win), 1);
+	win->wcols = 1;
+
+	nbkgrnd.ch = win->bch;
+	nbkgrnd.attr = win->battr;
+	nbkgrnd.cflags = CA_BACKGROUND;
+	nbkgrnd.wcols = win->wcols;
+	nbkgrnd.nsp = NULL;
+	_cursesi_copy_nsp(win->bnsp, &nbkgrnd);
+
+	/* if the background is already this char then skip updating */
+	if (_cursesi_celleq(&obkgrnd, &nbkgrnd))
+		return;
+
+	/*
+	 * Now do the dirty work of updating all the locations
+	 * that have the old background character with the new.
+	 */
+
+	for (wy = 0; wy < win->maxy; wy++) {
+		wlp = win->alines[wy];
+		for (wx = 0; wx < win->maxx; wx++) {
+			if (wlp->line[wx].cflags & CA_BACKGROUND) {
+				_cursesi_copy_wchar(&nbkgrnd, &wlp->line[wx]);
+			}
+		}
+	}
+	__touchwin(win, 0);
+
 }
 
 
 int
 wbkgrnd(WINDOW *win, const cchar_t *wch)
 {
-#ifdef DEBUG
 	__CTRACE(__CTRACE_ATTR, "wbkgrnd: (%p), '%s', %x\n",
-		win, (const char *) wunctrl(wch), wch->attributes);
-#endif
+	    win, (const char *)wunctrl(wch), wch->attributes);
+
+	if (__predict_false(win == NULL))
+		return ERR;
 
 	/* ignore multi-column characters */
 	if (!wch->elements || wcwidth( wch->vals[ 0 ]) > 1)
 		return ERR;
 
 	wbkgrndset(win, wch);
-	__touchwin(win);
+	__touchwin(win, 1);
 	return OK;
 }
 
@@ -245,6 +286,9 @@ int
 wgetbkgrnd(WINDOW *win, cchar_t *wch)
 {
 	nschar_t *np;
+
+	if (__predict_false(win == NULL))
+		return ERR;
 
 	/* Background attributes (check colour). */
 	wch->attributes = win->battr & WA_ATTRIBUTES;

@@ -29,13 +29,13 @@
  * SUCH DAMAGE.
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
 __COPYRIGHT("@(#) Copyright (c) 1980, 1991, 1993\
  The Regents of the University of California.  All rights reserved.");
+__RCSID("$NetBSD: tset.c,v 1.20 2011/09/06 18:34:12 joerg Exp $");
 
 #include <sys/types.h>
 #include <sys/ioctl.h>
-#include <sys/ttydefaults.h>
 #include <ctype.h>
 #include <err.h>
 #include <errno.h>
@@ -49,7 +49,7 @@ __COPYRIGHT("@(#) Copyright (c) 1980, 1991, 1993\
 
 static void	obsolete(char *[]);
 static void	report(const char *, int, u_int);
-__dead static void	usage(char*);
+__dead static void	usage(void);
 
 struct termios mode, oldmode;
 
@@ -59,7 +59,6 @@ int	nlines, ncolumns;	/* window size */
 int
 main(int argc, char *argv[])
 {
-	char *a0 = argv[0];
 #ifdef TIOCGWINSZ
 	struct winsize win;
 #endif
@@ -142,14 +141,14 @@ main(int argc, char *argv[])
 			break;
 		case '?':
 		default:
-			usage(a0);
+			usage();
 		}
 	}
 	argc -= optind;
 	argv += optind;
 
 	if (argc > 1)
-		usage(a0);
+		usage();
 
 	ttype = get_terminfo_entry(*argv);
 
@@ -278,10 +277,10 @@ obsolete(char *argv[])
 }
 
 static void
-usage(char *a0)
+usage(void)
 {
 	(void)fprintf(stderr,
 "usage: %s [-EIQrSs] [-] [-e ch] [-i ch] [-k ch] [-m mapping] [terminal]\n",
-	a0);
+	getprogname());
 	exit(1);
 }

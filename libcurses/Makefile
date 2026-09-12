@@ -1,14 +1,17 @@
-#	$NetBSD: Makefile,v 1.94 2020/03/23 13:37:36 roy Exp $
+#	$NetBSD: Makefile,v 1.97 2026/08/04 21:31:06 andvar Exp $
 #	@(#)Makefile	8.2 (Berkeley) 1/2/94
 
 .include <bsd.own.mk>
 
 WARNS=	2
 
-CPPFLAGS+=-I${.CURDIR} -I${NETBSDSRCDIR}/lib/libterminfo
+CPPFLAGS+=-I${.CURDIR} -I${NETBSDSRCDIR}/lib/libterminfo -I.
 .if defined(DEBUG_CURSES)
 CPPFLAGS+=-g -DDEBUG
 .endif
+
+COPTS.slk.c += -Wno-stack-protector
+
 .if defined(SMALL)
 CPPFLAGS+=-DSMALL
 .endif
@@ -191,7 +194,8 @@ MLINKS+= curses_addch.3 addch.3 curses_addchstr.3 addchnstr.3 \
 	 curses_delch.3 wdelch.3 curses_deleteln.3 wdeleteln.3 \
 	 curses_echochar.3 wechochar.3 \
 	 curses_clear.3 werase.3 curses_input.3 wgetch.3 \
-	 curses_input.3 wgetnstr.3 curses_input.3 wgetstr.3 \
+	 curses_input.3 wgetnstr.3 curses_scroll.3 wgetscrreg.3 \
+	 curses_input.3 wgetstr.3 \
 	 curses_line.3 whline.3 curses_inch.3 winch.3 \
 	 curses_inch.3 winchnstr.3 curses_inch.3 winchstr.3 \
 	 curses_inch.3 winnstr.3 curses_insch.3 winsch.3 \
@@ -212,8 +216,12 @@ MLINKS+= curses_addch.3 addch.3 curses_addchstr.3 addchnstr.3 \
 
 SUBDIR.roff+= PSD.doc
 
+DPSRCS+=	fileio.h
+CLEANFILES+=	fileio.h
+
 fileio.h: shlib_version genfileioh.awk
-	${TOOL_AWK} -f ${.CURDIR}/genfileioh.awk < ${.CURDIR}/shlib_version > ${.CURDIR}/fileio.h
+	${TOOL_AWK} -f ${.CURDIR}/genfileioh.awk < ${.CURDIR}/shlib_version \
+	    > ${.TARGET}
 
 .include <bsd.lib.mk>
 .include <bsd.subdir.mk>

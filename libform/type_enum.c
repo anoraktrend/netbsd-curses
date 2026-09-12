@@ -29,14 +29,12 @@
  *
  */
 
-#define _BSD_SOURCE
-#define _XOPEN_SOURCE 600
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+__RCSID("$NetBSD: type_enum.c,v 1.13 2021/04/13 13:13:04 christos Exp $");
 
 #include <ctype.h>
 #include <stdlib.h>
 #include <strings.h>
-#include <string.h>
 #include "form.h"
 #include "internals.h"
 

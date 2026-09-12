@@ -27,7 +27,8 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+__RCSID("$NetBSD: setupterm.c,v 1.9 2019/04/11 23:52:08 jakllsch Exp $");
 
 #include <sys/ioctl.h>
 #include <assert.h>

@@ -27,8 +27,8 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <netbsd_sys/emalloc.h>
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+__RCSID("$NetBSD: infocmp.c,v 1.17 2020/03/31 12:44:15 roy Exp $");
 
 #include <sys/ioctl.h>
 
@@ -40,6 +40,7 @@
 #include <term_private.h>
 #include <term.h>
 #include <unistd.h>
+#include <util.h>
 
 #define SW 8
 
@@ -696,7 +697,7 @@ main(int argc, char **argv)
 			fprintf(stderr,
 			    "usage: %s [-1acnqux] [-A database] [-B database] "
 			    "[-w cols] [term]\n",
-			    argv[0]);
+			    getprogname());
 			return EXIT_FAILURE;
 		}
 	cols--;

@@ -27,7 +27,8 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+__RCSID("$NetBSD: termcap_map.c,v 1.3 2010/09/22 06:10:51 roy Exp $");
 
 typedef struct {
 	const char id[3];

@@ -30,9 +30,9 @@
 #ifndef _TERMCAP_H_
 #define	_TERMCAP_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <sys/cdefs.h>
+
+__BEGIN_DECLS
 
 /* Output functions.
  * These are still valid for terminfo. */
@@ -50,7 +50,5 @@ int		tgetflag(const char *);
 int		tgetnum(const char *);
 char *		tgoto(const char *, int, int);
 
-#ifdef __cplusplus
-}
-#endif
+__END_DECLS
 #endif

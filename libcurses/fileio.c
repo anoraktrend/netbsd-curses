@@ -1,4 +1,4 @@
-/*	$NetBSD: fileio.c,v 1.7 2020/02/24 12:20:29 rin Exp $	*/
+/*	$NetBSD: fileio.c,v 1.10 2024/12/23 02:58:03 blymn Exp $	*/
 
 /*-
  * Copyright (c) 2008 The NetBSD Foundation, Inc.
@@ -29,7 +29,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <netbsd_sys/cdefs.h>
+#ifndef LIBHACK
+#include <sys/cdefs.h>
+#ifndef lint
+__RCSID("$NetBSD: fileio.c,v 1.10 2024/12/23 02:58:03 blymn Exp $");
+#endif				/* not lint */
 
 #include "curses.h"
 #include "curses_private.h"
@@ -80,11 +84,9 @@ putwin(WINDOW *win, FILE *fp)
 	int y, x;
 	__LDATA *sp;
 
-#ifdef DEBUG
 	__CTRACE(__CTRACE_FILEIO, "putwin: win %p\n", win);
-#endif
 
-	if (win == NULL)
+	if (__predict_false(win == NULL))
 		return ERR;
 
 	/* win can't be a subwin */
@@ -173,9 +175,7 @@ getwin(FILE *fp)
 	int y, x;
 	__LDATA *sp;
 
-#ifdef DEBUG
 	__CTRACE(__CTRACE_FILEIO, "getwin\n");
-#endif
 
 	/* Check library version */
 	if (fread(&major, sizeof(int), 1, fp) != 1)
@@ -232,9 +232,7 @@ getwin(FILE *fp)
 		}
 		__touchline(win, y, 0, (int) win->maxx - 1);
 	}
-#ifdef DEBUG
 	__CTRACE(__CTRACE_FILEIO, "getwin: win = %p\n", win);
-#endif
 	return win;
 
 error1:
@@ -244,3 +242,4 @@ error0:
 		free(wtmp);
 	return NULL;
 }
+#endif /* !LIBHACK */

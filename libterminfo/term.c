@@ -26,13 +26,14 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#define _GNU_SOURCE
+
+#include <sys/cdefs.h>
+__RCSID("$NetBSD: term.c,v 1.34 2020/04/05 14:53:39 martin Exp $");
+
 #include <sys/stat.h>
 
-#include <netbsd_sys/cdefs.h>
-
 #include <assert.h>
-#include <netbsd_sys/cdbr.h>
+#include <cdbr.h>
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -42,15 +43,12 @@
 #include <string.h>
 #include <term_private.h>
 #include <term.h>
-#include <netbsd_sys/endian.h>
 
-#ifndef _PATH_TERMINFO
-#ifndef INSTALL_PREFIX
-#define _PATH_TERMINFO		"/usr/share/misc/terminfo"
-#else
-#define _PATH_TERMINFO INSTALL_PREFIX "/share/terminfo"
-#endif
-#endif
+/*
+ * Although we can read v1 structure (which includes v2 alias records)
+ * we really want a v3 structure to get numerics of type int rather than short.
+ */
+#define _PATH_TERMINFO	"/usr/share/misc/terminfo"
 
 #ifdef TERMINFO_DB
 static char __ti_database[PATH_MAX];
@@ -285,7 +283,7 @@ _ti_dbgetterm(TERMINAL *term, const char *path, const char *name, int flags)
 
 	/* Target file *may* be a cdb file without the extension. */
 	if (db == NULL && errno == ENOENT) {
-		len = snprintf(__ti_database, sizeof(__ti_database), "%s", path);
+		len = strlcpy(__ti_database, path, sizeof(__ti_database));
 		if (len < sizeof(__ti_database))
 			db = cdbr_open(__ti_database, CDBR_DEFAULT);
 	}
@@ -371,7 +369,6 @@ _ti_findterm(TERMINAL *term, const char *name, int flags)
 
 	c = NULL;
 #ifdef TERMINFO_COMPILE
-#ifdef USE_TERMCAP
 	if (e == NULL && (c = getenv("TERMCAP")) != NULL) {
 		if (*c != '\0' && *c != '/') {
 			c = strdup(c);
@@ -381,7 +378,7 @@ _ti_findterm(TERMINAL *term, const char *name, int flags)
 			}
 		}
 	}
-#endif
+
 	if (e != NULL) {
 		TIC *tic;
 

@@ -34,8 +34,10 @@
  * SUCH DAMAGE.
  */
 
-#define _XOPEN_SOURCE 700
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+#ifndef lint
+__RCSID("$NetBSD: cchar.c,v 1.12 2020/07/02 23:43:01 uwe Exp $");
+#endif						  /* not lint */
 
 #include <string.h>
 

@@ -1,4 +1,4 @@
-/*	$NetBSD: clrtoeol.c,v 1.31 2020/03/15 01:18:43 uwe Exp $	*/
+/*	$NetBSD: clrtoeol.c,v 1.36 2024/12/23 02:58:03 blymn Exp $	*/
 
 /*
  * Copyright (c) 1981, 1993, 1994
@@ -29,7 +29,14 @@
  * SUCH DAMAGE.
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+#ifndef lint
+#if 0
+static char sccsid[] = "@(#)clrtoeol.c	8.2 (Berkeley) 5/4/94";
+#else
+__RCSID("$NetBSD: clrtoeol.c,v 1.36 2024/12/23 02:58:03 blymn Exp $");
+#endif
+#endif				/* not lint */
 
 #include <stdlib.h>
 #include "curses.h"
@@ -61,11 +68,10 @@ wclrtoeol(WINDOW *win)
 	wchar_t bch;
 	attr_t	battr;
 
-#ifdef HAVE_WCHAR
-	bch = (wchar_t)btowc((int)win->bch);
-#else
+	if (__predict_false(win == NULL))
+		return ERR;
+
 	bch = win->bch;
-#endif
 	if (win != curscr)
 		battr = win->battr & __ATTRIBUTES;
 	else
@@ -88,6 +94,12 @@ wclrtoeol(WINDOW *win)
 	maxx = &win->alines[y]->line[x];
 
 	for (sp = maxx; sp < end; sp++) {
+		/*
+		 * It looks like ncurses makes the rest of line foreground
+		 * when it is cleared - this doesn't seem right but it
+		 * makes applicatins look right.
+		 */
+		sp->cflags &= ~CA_BACKGROUND;
 		if (!(__NEED_ERASE(sp, bch, battr)))
 			continue;
 
@@ -100,16 +112,14 @@ wclrtoeol(WINDOW *win)
 #ifdef HAVE_WCHAR
 		if (_cursesi_copy_nsp(win->bnsp, sp) == ERR)
 			return ERR;
-		SET_WCOL(*sp, 1);
+		sp->wcols = 1;
 #endif
 	}
 
-#ifdef DEBUG
 	__CTRACE(__CTRACE_ERASE, "CLRTOEOL: y = %d, minx = %d, maxx = %d, "
 	    "firstch = %d, lastch = %d\n",
 	    y, minx, (int)(maxx - win->alines[y]->line),
 	    *win->alines[y]->firstchp, *win->alines[y]->lastchp);
-#endif
 	/* Update firstch and lastch for the line. */
 	__touchline(win, y, x, (int)win->maxx - 1);
 	__sync(win);

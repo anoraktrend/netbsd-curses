@@ -1,4 +1,4 @@
-/*	$NetBSD: acs.c,v 1.21 2017/01/06 13:53:18 roy Exp $	*/
+/*	$NetBSD: acs.c,v 1.22 2021/09/06 07:03:49 rin Exp $	*/
 
 /*
  * Copyright (c) 2000 The NetBSD Foundation, Inc.
@@ -29,11 +29,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/cdefs.h>
+#ifndef lint
+__RCSID("$NetBSD: acs.c,v 1.22 2021/09/06 07:03:49 rin Exp $");
+#endif				/* not lint */
+
 #include "curses.h"
 #include "curses_private.h"
-#include <netbsd_sys/cdefs.h>
-#include "term.h"
 #include <string.h>
+
 chtype _acs_char[NUM_ACS];
 #ifdef HAVE_WCHAR
 #include <assert.h>
@@ -109,9 +113,7 @@ __init_acs(SCREEN *screen)
 		if (acs < NUM_ACS)
 			_acs_char[acs] = term | __ALTCHARSET;
 		aofac++;
-#ifdef DEBUG
 		__CTRACE(__CTRACE_INIT, "__init_acs: %c = %c\n", acs, term);
-#endif
 	}
 
 	if (t_ena_acs(screen->term) != NULL)
@@ -159,9 +161,7 @@ __init_wacs(SCREEN *screen)
 	lstr = nl_langinfo(CODESET);
 	_DIAGASSERT(lstr);
 	if (strcasecmp(lstr, "UTF-8")) {
-#ifdef DEBUG
 		__CTRACE(__CTRACE_INIT, "__init_wacs: setting defaults\n" );
-#endif /* DEBUG */
 		WACS_RARROW->vals[0]  = ( wchar_t )btowc( '>' );
 		WACS_LARROW->vals[0]  = ( wchar_t )btowc( '<' );
 		WACS_UARROW->vals[0]  = ( wchar_t )btowc( '^' );
@@ -186,10 +186,8 @@ __init_wacs(SCREEN *screen)
 		WACS_STERLING->vals[0]= ( wchar_t )btowc( '}' );
 	} else {
 		/* Unicode defaults */
-#ifdef DEBUG
 		__CTRACE(__CTRACE_INIT,
 		    "__init_wacs: setting Unicode defaults\n" );
-#endif /* DEBUG */
 		WACS_RARROW->vals[0]  = 0x2192;
 		ACS_RARROW = '+' | __ACS_IS_WACS;
 		WACS_LARROW->vals[0]  = 0x2190;
@@ -257,10 +255,8 @@ __init_wacs(SCREEN *screen)
 	}
 
 	if (t_acs_chars(screen->term) == NULL) {
-#ifdef DEBUG
 		__CTRACE(__CTRACE_INIT,
 		    "__init_wacs: no alternative characters\n" );
-#endif /* DEBUG */
 		goto out;
 	}
 
@@ -277,9 +273,7 @@ __init_wacs(SCREEN *screen)
 			_wacs_char[acs].attributes |= WA_ALTCHARSET;
 		}
 		aofac++;
-#ifdef DEBUG
 		__CTRACE(__CTRACE_INIT, "__init_wacs: %c = %c\n", acs, term);
-#endif
 	}
 
 	if (t_ena_acs(screen->term) != NULL)

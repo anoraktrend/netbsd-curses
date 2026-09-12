@@ -1,4 +1,4 @@
-/*	$NetBSD: curses.h,v 1.130 2021/02/13 10:37:00 rillig Exp $	*/
+/*	$NetBSD: curses.h,v 1.133 2024/12/05 04:08:12 blymn Exp $	*/
 
 /*
  * Copyright (c) 1981, 1993, 1994
@@ -40,34 +40,12 @@
 #ifndef _CURSES_H_
 #define	_CURSES_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <sys/types.h>
-#include <stdint.h>
+#include <sys/cdefs.h>
 #include <wchar.h>
 
 #include <stdio.h>
 #include <stdbool.h>
-
-/*
- * following snippet is netbsd-curses portable specific
- */
-
-#include <stdarg.h>
-#define __va_list va_list
-#ifndef __printflike
-#if __GNUC__ >= 3
-#define __printflike(fmtarg, firstvararg)       \
-            __attribute__((__format__ (__printf__, fmtarg, firstvararg)))
-#define __scanflike(fmtarg, firstvararg)        \
-            __attribute__((__format__ (__scanf__, fmtarg, firstvararg)))
-#else
-#define __printflike(fmtarg, firstvararg)       /* nothing */
-#define __scanflike(fmtarg, firstvararg)        /* nothing */
-#endif
-#endif
 
 /*
  * attr_t must be the same size as wchar_t (see <wchar.h>) to avoid padding
@@ -305,7 +283,9 @@ typedef struct __screen SCREEN;
 
 #define	NUM_ACS	128
 
+__BEGIN_DECLS
 extern chtype _acs_char[NUM_ACS];
+__END_DECLS
 #ifdef __cplusplus
 #define __UC_CAST(a)	static_cast<unsigned char>(a)
 #else
@@ -349,7 +329,9 @@ extern chtype _acs_char[NUM_ACS];
 #define	ACS_STERLING	_acs_char[__UC_CAST('}')]
 
 #ifdef HAVE_WCHAR
+__BEGIN_DECLS
 extern cchar_t _wacs_char[NUM_ACS];
+__END_DECLS
 
 #define	WACS_RARROW     (&_wacs_char[(unsigned char)'+'])
 #define	WACS_LARROW     (&_wacs_char[(unsigned char)','])
@@ -398,7 +380,6 @@ extern cchar_t _wacs_char[NUM_ACS];
 #define	ACS_BSSS	ACS_TTEE
 #define	ACS_SBSB	ACS_VLINE
 #define	_acs_map	_acs_char
-#define	acs_map		_acs_char
 
 /*
  * Color definitions (ANSI color numbers)
@@ -422,6 +403,7 @@ extern cchar_t _wacs_char[NUM_ACS];
 #define	PAIR_NUMBER(n)	(((__UINT32_CAST(n)) & A_COLOR) >> 17)
 
 /* Curses external declarations. */
+__BEGIN_DECLS
 extern WINDOW	*curscr;		/* Current screen. */
 extern WINDOW	*stdscr;		/* Standard screen. */
 
@@ -434,6 +416,7 @@ extern int	 COLOR_PAIRS;		/* Max color pairs on the screen. */
 
 extern int	 ESCDELAY;		/* Delay between keys in esc seq's. */
 extern int	 TABSIZE;		/* Size of a tab. */
+__END_DECLS
 
 #ifndef OK
 #define	ERR	(-1)			/* Error return. */
@@ -550,6 +533,7 @@ extern int	 TABSIZE;		/* Size of a tab. */
 
 #else
 /* Use functions not macros... */
+__BEGIN_DECLS
 int	 addbytes(const char *, int);
 int	 addch(chtype);
 int	 addchnstr(const chtype *, int);
@@ -577,6 +561,7 @@ int	 echochar(const chtype);
 int	 erase(void);
 int	 getch(void);
 int	 getnstr(char *, int);
+int	 getscrreg(int *, int *);
 int	 getstr(char *);
 chtype	 inch(void);
 int	 inchnstr(chtype *, int);
@@ -628,6 +613,7 @@ int	 mvwgetnstr(WINDOW *, int, int, char *, int);
 int	 mvwgetstr(WINDOW *, int, int, char *);
 chtype	 mvwinch(WINDOW *, int, int);
 int	 mvwinsch(WINDOW *, int, int, chtype);
+__END_DECLS
 #endif /* _CURSES_USE_MACROS */
 
 #define	getyx(w, y, x)		(y) = getcury(w), (x) = getcurx(w)
@@ -654,6 +640,7 @@ int	 mvwinsch(WINDOW *, int, int, chtype);
 
 
 /* Public functions. */
+__BEGIN_DECLS
 int	 assume_default_colors(short, short);
 int	 baudrate(void);
 int	 beep(void);
@@ -666,7 +653,7 @@ int	 copywin(const WINDOW *, WINDOW *, int, int, int, int, int, int, int);
 int	 curs_set(int);
 int	 def_prog_mode(void);
 int	 def_shell_mode(void);
-int      define_key(char *, int);
+int      define_key(const char *, int);
 int	 delay_output(int);
 void     delscreen(SCREEN *);
 int	 delwin(WINDOW *);
@@ -733,7 +720,7 @@ int	 mvwprintw(WINDOW *, int, int, const char *, ...) __printflike(4, 5);
 int	 mvwscanw(WINDOW *, int, int, const char *, ...) __scanflike(4, 5);
 int	 napms(int);
 WINDOW	*newpad(int, int);
-SCREEN  *newterm(char *, FILE *, FILE *);
+SCREEN  *newterm(const char *, FILE *, FILE *);
 WINDOW	*newwin(int, int, int, int);
 int	 nl(void);
 attr_t	 no_color_attributes(void);
@@ -765,7 +752,7 @@ int	 savetty(void);
 int	 scanw(const char *, ...) __scanflike(1, 2);
 int	 scroll(WINDOW *);
 int	 scrollok(WINDOW *, bool);
-int	 setterm(char *);
+int	 setterm(const char *);
 int	 set_escdelay(int);
 int	 set_tabsize(int);
 SCREEN  *set_term(SCREEN *);
@@ -814,6 +801,7 @@ int	 wechochar(WINDOW *, const chtype);
 int	 werase(WINDOW *);
 int	 wgetch(WINDOW *);
 int	 wgetnstr(WINDOW *, char *, int);
+int	 wgetscrreg(WINDOW *, int *, int *);
 int	 wgetstr(WINDOW *, char *);
 int	 whline(WINDOW *, chtype, int);
 chtype	 winch(WINDOW *);
@@ -1071,9 +1059,6 @@ int	__waddbytes(WINDOW *, const char *, int, attr_t);
 #ifdef HAVE_WCHAR
 int	__cputwchar(wchar_t);
 #endif /* HAVE_WCHAR */
-
-#ifdef __cplusplus
-}
-#endif
+__END_DECLS
 
 #endif /* !_CURSES_H_ */

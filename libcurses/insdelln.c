@@ -1,4 +1,4 @@
-/*	$NetBSD: insdelln.c,v 1.18 2017/01/06 13:53:18 roy Exp $	*/
+/*	$NetBSD: insdelln.c,v 1.25 2026/04/01 20:32:56 hgutch Exp $	*/
 
 /*
  * Copyright (c) 2000 The NetBSD Foundation, Inc.
@@ -29,7 +29,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+#ifndef lint
+__RCSID("$NetBSD: insdelln.c,v 1.25 2026/04/01 20:32:56 hgutch Exp $");
+#endif				/* not lint */
 
 /*
  * Based on deleteln.c and insertln.c -
@@ -72,10 +75,12 @@ winsdelln(WINDOW *win, int nlines)
 #endif /* HAVE_WCHAR */
 	attr_t	attr;
 
-#ifdef DEBUG
 	__CTRACE(__CTRACE_LINE,
-	    "winsdelln: (%p) cury=%d lines=%d\n", win, win->cury, nlines);
-#endif
+	    "winsdelln: (%p) cury=%d lines=%d\n", win,
+	    (win != NULL) ? win->cury : 0, nlines);
+
+	if (__predict_false(win == NULL))
+		return ERR;
 
 	if (!nlines)
 		return OK;
@@ -115,15 +120,15 @@ winsdelln(WINDOW *win, int nlines)
 			for (i = 0; i < win->maxx; i++) {
 				win->alines[y]->line[i].ch = win->bch;
 				win->alines[y]->line[i].attr = attr;
-#ifndef HAVE_WCHAR
-				win->alines[y]->line[i].ch = win->bch;
-#else
-				win->alines[y]->line[i].ch
-					= (wchar_t)btowc((int)win->bch );
+				win->alines[y]->line[i].cflags |= 
+				    CA_BACKGROUND;
+				win->alines[y]->line[i].cflags &= 
+				    ~CA_CONTINUATION;
+#ifdef HAVE_WCHAR
 				lp = &win->alines[y]->line[i];
 				if (_cursesi_copy_nsp(win->bnsp, lp) == ERR)
 					return ERR;
-				SET_WCOL(*lp, 1);
+				lp->wcols = 1;
 #endif /* HAVE_WCHAR */
 			}
 		for (y = last; y >= win->cury; --y)
@@ -159,13 +164,13 @@ winsdelln(WINDOW *win, int nlines)
 			for (i = 0; i < win->maxx; i++) {
 				win->alines[y]->line[i].ch = win->bch;
 				win->alines[y]->line[i].attr = attr;
-#ifndef HAVE_WCHAR
-				win->alines[y]->line[i].ch = win->bch;
-#else
-				win->alines[y]->line[i].ch
-					= (wchar_t)btowc((int)win->bch);
+				win->alines[y]->line[i].cflags |= 
+				    CA_BACKGROUND;
+				win->alines[y]->line[i].cflags &= 
+				    ~CA_CONTINUATION;
+#ifdef HAVE_WCHAR
 				lp = &win->alines[y]->line[i];
-				SET_WCOL( *lp, 1 );
+				lp->wcols = 1;
 				if (_cursesi_copy_nsp(win->bnsp, lp) == ERR)
 					return ERR;
 #endif /* HAVE_WCHAR */

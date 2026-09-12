@@ -1,16 +1,21 @@
 #ifndef NETBSD_SYS_ENDIAN_H
 #define NETBSD_SYS_ENDIAN_H
 
-#if defined(__BYTE_ORDER__)
-#undef __BYTE_ORDER
-#define __BYTE_ORDER __BYTE_ORDER__
-#undef __LITTLE_ENDIAN
-#define __LITTLE_ENDIAN __ORDER_LITTLE_ENDIAN__
-#else
 #include <endian.h>
+/* Normalize GCC internal names to BSD names if the system header
+ * only provided the double-underscore variants. */
+#ifndef __BYTE_ORDER
+#  ifdef __BYTE_ORDER__
+#    define __BYTE_ORDER __BYTE_ORDER__
+#  endif
 #endif
-#if __LITTLE_ENDIAN+0 != 1234
-#error erroneus __LITTLE_ENDIAN macro
+#ifndef __LITTLE_ENDIAN
+#  ifdef __ORDER_LITTLE_ENDIAN__
+#    define __LITTLE_ENDIAN __ORDER_LITTLE_ENDIAN__
+#  endif
+#endif
+#if defined(__LITTLE_ENDIAN) && __LITTLE_ENDIAN+0 != 1234
+#  error erroneous __LITTLE_ENDIAN macro
 #endif
 #include <stdint.h>
 

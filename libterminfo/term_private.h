@@ -1,4 +1,4 @@
-/* $NetBSD: term_private.h,v 1.19 2020/06/21 15:05:23 roy Exp $ */
+/* $NetBSD: term_private.h,v 1.22 2025/09/23 20:31:20 js Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2013, 2020 The NetBSD Foundation, Inc.
@@ -70,15 +70,12 @@
  * always stored as little endian.
  */
 
-#include <stdint.h>
-#include <string.h>
-#include <netbsd_sys/endian.h>
-#ifndef _DIAGASSERT
-#define _DIAGASSERT(X)
+#if HAVE_NBTOOL_CONFIG_H
+# include "nbtool_config.h"
 #endif
-/* some comment, so patches touching includes apply
- */
-
+#if !HAVE_NBTOOL_CONFIG_H || HAVE_SYS_ENDIAN_H
+# include <sys/endian.h>
+#endif
 #include <sys/types.h>
 #include <assert.h>
 #include <limits.h>

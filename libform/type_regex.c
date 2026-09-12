@@ -29,7 +29,8 @@
  *
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+__RCSID("$NetBSD: type_regex.c,v 1.8 2021/04/13 13:13:04 christos Exp $");
 
 #include <stdlib.h>
 #include <sys/types.h>

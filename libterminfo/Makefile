@@ -1,4 +1,4 @@
-#	$NetBSD: Makefile,v 1.23 2020/04/05 12:31:02 roy Exp $
+#	$NetBSD: Makefile,v 1.25 2025/09/18 03:36:00 mrg Exp $
 
 .include <bsd.own.mk>
 
@@ -22,9 +22,11 @@ INCSDIR=	/usr/include
 .if !defined(SMALLPROG)
 CPPFLAGS+=	-DTERMINFO_COMPILE -DTERMINFO_DB -DTERMINFO_COMPAT
 SRCS+=		compile.c
+
+COPTS.compile.c+=	${CC_WNO_CALLOC_TRANSPOSED_ARGS}
 .endif
 
-COPTS.tparm.c = -Wno-format-nonliteral
+COPTS.tparm.c+=		-Wno-format-nonliteral
 
 MAN=		terminfo.3 terminfo.5
 MLINKS=		terminfo.3 setupterm.3 \
@@ -47,7 +49,7 @@ MLINKS+=	termcap.3 tgetent.3 termcap.3 tgetflag.3 termcap.3 tgetnum.3 \
 
 CPPFLAGS+=	-I${.OBJDIR}
 
-.include <Makefile.hash>
+.include "Makefile.hash"
 
 # Generate our man pages
 terminfo.5: genman terminfo.5.in term.h termcap_map.c

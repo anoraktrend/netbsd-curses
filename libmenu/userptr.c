@@ -26,7 +26,8 @@
  *
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+__RCSID("$NetBSD: userptr.c,v 1.9 2003/03/09 01:08:48 lukem Exp $");
 
 #include <menu.h>
 #include <stdlib.h>
@@ -42,7 +43,7 @@ extern ITEM _menui_default_item;
  * Set the item user pointer data
  */
 int
-set_item_userptr(ITEM *param_item, void *userptr)
+set_item_userptr(ITEM *param_item, char *userptr)
 {
 	ITEM *item = (param_item != NULL) ? param_item : &_menui_default_item;
 	
@@ -54,7 +55,7 @@ set_item_userptr(ITEM *param_item, void *userptr)
 /*
  * Return the item user pointer
  */
-void *
+char *
 item_userptr(ITEM *item)
 {
 	if (item == NULL)
@@ -66,7 +67,7 @@ item_userptr(ITEM *item)
 /*
  * Return the user pointer for the given menu
  */
-void *
+char *
 menu_userptr(MENU *menu)
 {
 	if (menu == NULL)
@@ -79,7 +80,7 @@ menu_userptr(MENU *menu)
  * Set the user pointer for the given menu
  */
 int
-set_menu_userptr(MENU *param_menu, void *userptr)
+set_menu_userptr(MENU *param_menu, char *userptr)
 {
 	MENU *menu = (param_menu != NULL) ? param_menu : &_menui_default_menu;
 

@@ -27,10 +27,10 @@
  *
  *
  */
-#define _GNU_SOURCE
-#include <string.h>
-#include <stdlib.h>
-#include <netbsd_sys/cdefs.h>
+
+#include <sys/cdefs.h>
+__RCSID("$NetBSD: field.c,v 1.32 2021/04/13 13:13:03 christos Exp $");
+
 #include <sys/param.h>
 #include <stdlib.h>
 #include <strings.h>
@@ -332,7 +332,8 @@ field_buffer_init(FIELD *field, int buffer, unsigned int len)
 			return E_SYSTEM_ERROR;
 		field->alines->string = newp;
 		field->alines->allocated = len + 1;
-		snprintf(field->alines->string, len + 1, "%s", field->buffers[buffer].string);
+		strlcpy(field->alines->string, field->buffers[buffer].string,
+			(size_t) len + 1);
 		field->alines->expanded =
 			_formi_tab_expanded_length(field->alines->string,
 						   0, field->alines->length);
@@ -439,7 +440,7 @@ set_field_buffer(FIELD *field, int buffer, const char *value)
 	    field->buffers[buffer].string, (size_t) len + 1)) == NULL)
 		return E_SYSTEM_ERROR;
 
-	snprintf(field->buffers[buffer].string, len + 1, "%s", value);
+	strlcpy(field->buffers[buffer].string, value, (size_t) len + 1);
 	field->buffers[buffer].length = len;
 	field->buffers[buffer].allocated = len + 1;
 	status = field_buffer_init(field, buffer, len);

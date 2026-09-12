@@ -32,12 +32,6 @@
 #include <curses.h>
 #include <eti.h>
 
-#define MENU_NOOP_SPACING
-#ifdef MENU_NOOP_SPACING
-#define set_menu_spacing(a,b,c,d) (E_BAD_ARGUMENT)
-#define menu_spacing(a,b,c,d) (E_BAD_ARGUMENT)
-#endif
-
 /* requests for the menu_driver call */
 #define REQ_BASE_NUM      (KEY_MAX + 0x200)
 #define REQ_LEFT_ITEM     (KEY_MAX + 0x201)
@@ -80,11 +74,6 @@ typedef struct __menu_str {
         int length;
 } MENU_STR;
 
-typedef struct __mark_str {
-        char string[15];
-        unsigned char length;
-} MARK_STR;
-
 typedef struct __menu MENU;
 typedef struct __item ITEM;
 
@@ -93,7 +82,7 @@ typedef void (*Menu_Hook) (MENU *);
 struct __item {
         MENU_STR name;
         MENU_STR description;
-        void *userptr;
+        char *userptr;
         int visible;  /* set if item is visible */
         int selected; /* set if item has been selected */
 	int row; /* menu row this item is on */
@@ -116,8 +105,8 @@ struct __menu {
 	int item_cols; /* number of item columns we have */
         int cur_row; /* current cursor row */
         int cur_col; /* current cursor column */
-        MARK_STR mark; /* menu mark string */
-        MARK_STR unmark; /* menu unmark string */
+        MENU_STR mark; /* menu mark string */
+        MENU_STR unmark; /* menu unmark string */
         OPTIONS opts; /* options for the menu */
         char *pattern; /* the pattern buffer */
 	int plen;  /* pattern buffer length */
@@ -127,7 +116,7 @@ struct __menu {
         attr_t back; /* menu background */
         attr_t grey; /* greyed out (nonselectable) menu item */
         int pad;  /* filler char between name and description */
-        void *userptr;
+        char *userptr;
 	int top_row; /* the row that is at the top of the menu */
 	int max_item_width; /* widest item */
 	int col_width; /* width of the menu columns - this is not always
@@ -149,9 +138,7 @@ struct __menu {
 
 
 /* Public function prototypes. */
-#ifdef __cplusplus
-extern "C" {
-#endif
+__BEGIN_DECLS
 int  menu_driver(MENU *, int);
 int scale_menu(MENU *, int *, int *);
 int set_top_row(MENU *, int);
@@ -173,7 +160,7 @@ char *menu_pattern(MENU *);
 WINDOW *menu_sub(MENU *);
 Menu_Hook menu_term(MENU *);
 char *menu_unmark (MENU *);
-void *menu_userptr(MENU *);
+char *menu_userptr(MENU *);
 WINDOW *menu_win(MENU *);
 MENU *new_menu(ITEM **);
 int post_menu(MENU *);
@@ -190,7 +177,7 @@ int set_menu_pattern(MENU *, char *);
 int set_menu_sub(MENU *, WINDOW *);
 int set_menu_term(MENU *, Menu_Hook);
 int set_menu_unmark(MENU *, char *);
-int set_menu_userptr(MENU *, void *);
+int set_menu_userptr(MENU *, char *);
 int  set_menu_win(MENU *, WINDOW *);
 int unpost_menu(MENU *);
 
@@ -206,7 +193,7 @@ int item_opts_off(ITEM *, OPTIONS);
 int item_opts_on(ITEM *, OPTIONS);
 int item_selected(MENU *, int **); /* return the item index of selected */
 Menu_Hook item_term(MENU *);
-void *item_userptr(ITEM *);
+char *item_userptr(ITEM *);
 int item_value(ITEM *);
 int item_visible(ITEM *);
 ITEM **menu_items(MENU *);
@@ -215,11 +202,9 @@ int set_current_item(MENU *, ITEM *);
 int set_item_init(MENU *, Menu_Hook);
 int set_item_opts(ITEM *, OPTIONS);
 int set_item_term(MENU *, Menu_Hook);
-int set_item_userptr(ITEM *, void *);
+int set_item_userptr(ITEM *, char *);
 int set_item_value(ITEM *, int);
 
-#ifdef __cplusplus
-}
-#endif
+__END_DECLS
 
 #endif /* !_MENU_H_ */

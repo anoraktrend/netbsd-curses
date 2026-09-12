@@ -1,4 +1,4 @@
-/*	$NetBSD: nbperf.c,v 1.5 2013/01/31 16:32:02 joerg Exp $	*/
+/*	$NetBSD: nbperf.c,v 1.9 2024/09/22 20:34:26 christos Exp $	*/
 /*-
  * Copyright (c) 2009 The NetBSD Foundation, Inc.
  * All rights reserved.
@@ -31,43 +31,39 @@
  * SUCH DAMAGE.
  */
 
-#undef _GNU_SOURCE
-#define _GNU_SOURCE
-#undef _XOPEN_SOURCE
-#define _XOPEN_SOURCE 700
-
 #if HAVE_NBTOOL_CONFIG_H
 #include "nbtool_config.h"
 #endif
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+__RCSID("$NetBSD: nbperf.c,v 1.9 2024/09/22 20:34:26 christos Exp $");
 
-#include <netbsd_sys/endian.h>
+#include <sys/endian.h>
 #include <err.h>
 #include <errno.h>
 #include <inttypes.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "nbperf.h"
-extern void mi_vector_hash(const void *restrict, size_t, uint32_t, uint32_t[3]);
 
 static int predictable;
 
 static __dead
-void usage(char *a0)
+void usage(void)
 {
 	fprintf(stderr,
 	    "%s [-ps] [-c utilisation] [-i iterations] [-n name] "
 	    "[-o output] input\n",
-	    a0);
+	    getprogname());
 	exit(1);
 }
 
-#if !defined(__NetBSD__)
-#define	arc4random() 0x4c957f2d
+#if HAVE_NBTOOL_CONFIG_H
+#define	arc4random() rand()
 #endif
 
 static void
@@ -120,8 +116,9 @@ main(int argc, char **argv)
 	    .map_output = NULL,
 	    .output = NULL,
 	    .static_hash = 0,
-	    .first_round = 1,
+	    .check_duplicates = 0,
 	    .has_duplicates = 0,
+	    .allow_hash_fudging = 0,
 	};
 	FILE *input;
 	size_t curlen = 0, curalloc = 0;
@@ -130,14 +127,14 @@ main(int argc, char **argv)
 	size_t line_allocated;
 	const void **keys = NULL;
 	size_t *keylens = NULL;
-	uint32_t max_iterations = 0xffffffU;
+	uint32_t max_iterations = ~0U;
 	long long tmp;
 	int looped, ch;
 	int (*build_hash)(struct nbperf *) = chm_compute;
 
 	set_hash(&nbperf, "mi_vector_hash");
 
-	while ((ch = getopt(argc, argv, "a:c:h:i:m:n:o:ps")) != -1) {
+	while ((ch = getopt(argc, argv, "a:c:fh:i:m:n:o:ps")) != -1) {
 		switch (ch) {
 		case 'a':
 			/* Accept bdz as alias for netbsd-6 compat. */
@@ -149,13 +146,16 @@ main(int argc, char **argv)
 			         strcmp(optarg, "bdz") == 0)
 				build_hash = bpz_compute;
 			else
-				errx(1, "Unsupport algorithm: %s", optarg);
+				errx(1, "Unsupported algorithm: %s", optarg);
 			break;
 		case 'c':
 			errno = 0;
 			nbperf.c = strtod(optarg, &eos);
 			if (errno || eos[0] || !nbperf.c)
 				errx(2, "Invalid argument for -c");
+			break;
+		case 'f':
+			nbperf.allow_hash_fudging = 1;
 			break;
 		case 'h':
 			set_hash(&nbperf, optarg);
@@ -193,7 +193,7 @@ main(int argc, char **argv)
 			nbperf.static_hash = 1;
 			break;
 		default:
-			usage(argv[0]);
+			usage();
 		}
 	}
 
@@ -201,7 +201,7 @@ main(int argc, char **argv)
 	argv += optind;
 
 	if (argc > 1)
-		usage(argv[0]);
+		usage();
 
 	if (argc == 1) {
 		input = fopen(argv[0], "r");
@@ -246,12 +246,20 @@ main(int argc, char **argv)
 	nbperf.keylens = keylens;
 
 	looped = 0;
-	while ((*build_hash)(&nbperf)) {
-		if (nbperf.has_duplicates)
+	int rv;
+	for (;;) {
+		rv = (*build_hash)(&nbperf);
+		if (!rv)
+			break;
+		if (nbperf.has_duplicates) {
+			fputc('\n', stderr);
 			errx(1, "Duplicate keys detected");
+		}
 		fputc('.', stderr);
+		if (!looped)
+			nbperf.check_duplicates = 1;
 		looped = 1;
-		if (max_iterations == 0xffffffffU)
+		if (max_iterations == ~0U)
 			continue;
 		if (--max_iterations == 0) {
 			fputc('\n', stderr);

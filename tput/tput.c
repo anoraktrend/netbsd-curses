@@ -29,7 +29,18 @@
  * SUCH DAMAGE.
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+#ifndef lint
+__COPYRIGHT("@(#) Copyright (c) 1980, 1988, 1993\
+ The Regents of the University of California.  All rights reserved.");
+#endif /* not lint */
+
+#ifndef lint
+#if 0
+static char sccsid[] = "@(#)tput.c	8.3 (Berkeley) 4/28/95";
+#endif
+__RCSID("$NetBSD: tput.c,v 1.26 2013/02/05 11:31:56 roy Exp $");
+#endif /* not lint */
 
 #include <termios.h>
 
@@ -43,7 +54,7 @@
 #include <term.h>
 #include <unistd.h>
 
-static void   usage(char*) __dead;
+static void   usage(void) __dead;
 static char **process(const char *, const char *, char **);
 
 int
@@ -62,7 +73,7 @@ main(int argc, char **argv)
 			break;
 		case '?':
 		default:
-			usage(argv[0]);
+			usage();
 		}
 	argc -= optind;
 	argv += optind;
@@ -175,10 +186,10 @@ process(const char *cap, const char *str, char **argv)
 }
 
 static void
-usage(char*a0)
+usage(void)
 {
 	(void)fprintf(stderr,
 	    "Usage: %s [-T term] attribute [attribute-args] ...\n",
-	    a0);
+	    getprogname());
 	exit(2);
 }

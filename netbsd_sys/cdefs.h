@@ -51,6 +51,20 @@
 #ifndef __arraycount
 #define __arraycount(a) (sizeof(a) / sizeof(*(a)))
 #endif
+#ifndef __nothing
+#define __nothing ((void)0)
+#endif
+/* __unused is intentionally not defined here: defining it as a macro
+ * breaks struct members named __unused on uClibc/musl (e.g. <stdio.h>).
+ * Consumers needing an unused-parameter marker should define it locally
+ * (see libcurses/mouse.c) or use __attribute__((__unused__)) directly.
+ */
+#ifndef __CONCAT
+#define __CONCAT(a,b) a##b
+#endif
+#ifndef __STRINGIFY
+#define __STRINGIFY(a) #a
+#endif
 
 #if __GNUC__ >= 4
 #  define __dso_public  __attribute__((__visibility__("default")))

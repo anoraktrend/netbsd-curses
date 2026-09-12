@@ -1,4 +1,4 @@
-/*	$NetBSD: clear.c,v 1.13 2003/08/07 16:44:19 agc Exp $	*/
+/*	$NetBSD: clear.c,v 1.14 2024/12/23 02:58:03 blymn Exp $	*/
 
 /*
  * Copyright (c) 1981, 1993, 1994
@@ -29,7 +29,14 @@
  * SUCH DAMAGE.
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+#ifndef lint
+#if 0
+static char sccsid[] = "@(#)clear.c	8.2 (Berkeley) 5/4/94";
+#else
+__RCSID("$NetBSD: clear.c,v 1.14 2024/12/23 02:58:03 blymn Exp $");
+#endif
+#endif				/* not lint */
 
 #include "curses.h"
 #include "curses_private.h"
@@ -55,6 +62,9 @@ clear(void)
 int
 wclear(WINDOW *win)
 {
+	if (__predict_false(win == NULL))
+		return ERR;
+
 	if (werase(win) == OK) {
 		win->flags |= __CLEAROK;
 		return (OK);

@@ -1,4 +1,4 @@
-/*   $NetBSD: in_wchstr.c,v 1.8 2019/06/09 07:40:14 blymn Exp $ */
+/*   $NetBSD: in_wchstr.c,v 1.11 2024/12/23 02:58:03 blymn Exp $ */
 
 /*
  * Copyright (c) 2005 The NetBSD Foundation Inc.
@@ -34,7 +34,10 @@
  * SUCH DAMAGE.
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+#ifndef lint
+__RCSID("$NetBSD: in_wchstr.c,v 1.11 2024/12/23 02:58:03 blymn Exp $");
+#endif						  /* not lint */
 
 #include "curses.h"
 #include "curses_private.h"
@@ -44,7 +47,7 @@
  *	Return an array of wide characters at cursor position from stdscr.
  */
 __warn_references(in_wchstr,
-	"warning: this program uses in_wchstr(), which is unsafe.");
+	"warning: this program uses in_wchstr(), which is unsafe.")
 int
 in_wchstr(cchar_t *wchstr)
 {
@@ -62,7 +65,7 @@ in_wchnstr(cchar_t *wchstr, int n)
  *  Return an array of wide characters at position (y, x) from stdscr.
  */
 __warn_references(mvin_wchstr,
-	"warning: this program uses mvin_wchstr(), which is unsafe.");
+	"warning: this program uses mvin_wchstr(), which is unsafe.")
 int
 mvin_wchstr(int y, int x, cchar_t *wchstr)
 {
@@ -80,7 +83,7 @@ mvin_wchnstr(int y, int x, cchar_t *wchstr, int n)
  *  Return an array wide characters at position (y, x) from the given window.
  */
 __warn_references(mvwin_wchstr,
-	"warning: this program uses mvwin_wchstr(), which is unsafe.");
+	"warning: this program uses mvwin_wchstr(), which is unsafe.")
 int
 mvwin_wchstr(WINDOW *win, int y, int x, cchar_t *wchstr)
 {
@@ -104,7 +107,7 @@ mvwin_wchnstr(WINDOW *win, int y, int x, cchar_t *wchstr, int n)
  *	Return an array of characters at cursor position.
  */
 __warn_references(win_wchstr,
-	"warning: this program uses win_wchstr(), which is unsafe.");
+	"warning: this program uses win_wchstr(), which is unsafe.")
 int
 win_wchstr(WINDOW *win, cchar_t *wchstr)
 {
@@ -124,12 +127,15 @@ win_wchnstr(WINDOW *win, cchar_t *wchstr, int n)
 	cchar_t *wcp;
 	nschar_t *np;
 
+	if (__predict_false(win == NULL))
+		return ERR;
+
 	if (wchstr == NULL)
 		return ERR;
 
 	start = &win->alines[win->cury]->line[win->curx];
 	x = win->curx;
-	cw = WCOL(*start);
+	cw = start->wcols;
 	if (cw < 0) {
 		start += cw;
 		x += cw;
@@ -137,7 +143,7 @@ win_wchnstr(WINDOW *win, cchar_t *wchstr, int n)
 	wcp = wchstr;
 	/* (n - 1) to leave room for the trailing 0 element */
 	while ((x < win->maxx) && ((n < 0) || ((n > 1) && (cnt < n - 1)))) {
-		cw = WCOL(*start);
+		cw = start->wcols;
 		wcp->vals[0] = start->ch;
 		wcp->attributes = start->attr;
 		wcp->elements = 1;

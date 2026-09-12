@@ -1,4 +1,4 @@
-/*   $NetBSD: addwstr.c,v 1.6 2019/06/09 07:40:14 blymn Exp $ */
+/*   $NetBSD: addwstr.c,v 1.9 2024/12/23 02:58:03 blymn Exp $ */
 
 /*
  * Copyright (c) 2005 The NetBSD Foundation Inc.
@@ -34,7 +34,10 @@
  * SUCH DAMAGE.
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+#ifndef lint
+__RCSID("$NetBSD: addwstr.c,v 1.9 2024/12/23 02:58:03 blymn Exp $");
+#endif						  /* not lint */
 
 #include <string.h>
 
@@ -131,6 +134,9 @@ waddnwstr(WINDOW *win, const wchar_t *s, int n)
 	cchar_t cc;
 	wchar_t wc[2];
 
+	if (__predict_false(win == NULL))
+		return ERR;
+
 	/*
 	 * BSD curses: if (n > 0) then "at most n", else "len = strlen(s)"
 	 * ncurses: if (n >= 0) then "at most n", else "len = strlen(s)"
@@ -143,9 +149,7 @@ waddnwstr(WINDOW *win, const wchar_t *s, int n)
 		for (p = s, len = 0; n-- && *p++; ++len);
 	else
 		len = wcslen(s);
-#ifdef DEBUG
-	__CTRACE(__CTRACE_INPUT, "waddnwstr: string len=%ld\n", (long) len);
-#endif /* DEBUG */
+	__CTRACE(__CTRACE_INPUT, "waddnwstr: string len=%zu\n", len);
 
 	p = s;
 	while (len) {
@@ -155,10 +159,8 @@ waddnwstr(WINDOW *win, const wchar_t *s, int n)
 			return ERR;
 		if (wadd_wch( win, &cc ) == ERR)
 			return ERR;
-#ifdef DEBUG
 		__CTRACE(__CTRACE_INPUT, "waddnwstr: (%x,%x,%d) added\n",
-			 cc.vals[ 0 ], cc.attributes, cc.elements );
-#endif /* DEBUG */
+		    cc.vals[0], cc.attributes, cc.elements);
 		p++, len--;
 	}
 

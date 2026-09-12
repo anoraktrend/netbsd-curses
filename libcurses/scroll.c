@@ -1,4 +1,4 @@
-/*	$NetBSD: scroll.c,v 1.26 2019/06/09 07:40:14 blymn Exp $	*/
+/*	$NetBSD: scroll.c,v 1.29 2024/12/23 02:58:04 blymn Exp $	*/
 
 /*
  * Copyright (c) 1981, 1993, 1994
@@ -29,7 +29,14 @@
  * SUCH DAMAGE.
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+#ifndef lint
+#if 0
+static char sccsid[] = "@(#)scroll.c	8.3 (Berkeley) 5/4/94";
+#else
+__RCSID("$NetBSD: scroll.c,v 1.29 2024/12/23 02:58:04 blymn Exp $");
+#endif
+#endif				/* not lint */
 
 #include "curses.h"
 #include "curses_private.h"
@@ -69,6 +76,17 @@ setscrreg(int top, int bottom)
 	return wsetscrreg(stdscr, top, bottom);
 }
 
+/*
+ * getscrreg --
+ *	Get the top and bottom of the scrolling region for stdscr.
+ */
+int
+getscrreg(int *top, int *bottom)
+{
+
+	return wgetscrreg(stdscr, top, bottom);
+}
+
 #endif
 
 /*
@@ -80,9 +98,10 @@ wscrl(WINDOW *win, int nlines)
 {
 	int     oy, ox;
 
-#ifdef DEBUG
 	__CTRACE(__CTRACE_WINDOW, "wscrl: (%p) lines=%d\n", win, nlines);
-#endif
+
+	if (__predict_false(win == NULL))
+		return ERR;
 
 	if (!(win->flags & __SCROLLOK))
 		return ERR;
@@ -90,9 +109,7 @@ wscrl(WINDOW *win, int nlines)
 		return OK;
 
 	getyx(win, oy, ox);
-#ifdef DEBUG
 	__CTRACE(__CTRACE_WINDOW, "wscrl: y=%d\n", oy);
-#endif
 	wmove(win, win->scr_t, 1);
 	winsdelln(win, 0 - nlines);
 	wmove(win, oy, ox);
@@ -101,9 +118,7 @@ wscrl(WINDOW *win, int nlines)
 		__cputchar('\n');
 		if (!__NONL)
 			win->curx = 0;
-#ifdef DEBUG
 		__CTRACE(__CTRACE_WINDOW, "scroll: win == curscr\n");
-#endif
 	}
 	return OK;
 }
@@ -115,10 +130,28 @@ wscrl(WINDOW *win, int nlines)
 int
 wsetscrreg(WINDOW *win, int top, int bottom)
 {
+	if (__predict_false(win == NULL))
+		return ERR;
+
 	if (top < 0 || bottom >= win->maxy || bottom - top < 1)
 		return ERR;
 	win->scr_t = top;
 	win->scr_b = bottom;
+	return OK;
+}
+
+/*
+ * wgetscrreg --
+ *	Get the top and bottom of the scrolling region for win.
+ */
+int
+wgetscrreg(WINDOW *win, int *top, int *bottom)
+{
+	if (__predict_false(win == NULL))
+		return ERR;
+
+	*top = win->scr_t;
+	*bottom = win->scr_b;
 	return OK;
 }
 

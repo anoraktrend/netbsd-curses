@@ -1,4 +1,4 @@
-/*   $NetBSD: insstr.c,v 1.8 2020/07/06 22:46:50 uwe Exp $ */
+/*   $NetBSD: insstr.c,v 1.12 2024/12/23 02:58:03 blymn Exp $ */
 
 /*
  * Copyright (c) 2005 The NetBSD Foundation Inc.
@@ -34,7 +34,10 @@
  * SUCH DAMAGE.
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+#ifndef lint
+__RCSID("$NetBSD: insstr.c,v 1.12 2024/12/23 02:58:03 blymn Exp $");
+#endif						  /* not lint */
 
 #include <string.h>
 #include <stdlib.h>
@@ -147,21 +150,20 @@ winsnstr(WINDOW *win, const char *str, int n)
 	nschar_t *np, *tnp;
 #endif /* HAVE_WCHAR */
 
+	if (__predict_false(win == NULL))
+		return ERR;
+
 	/* find string length */
 	if (n > 0)
 		for (scp = str, len = 0; n-- && *scp++; ++len);
 	else
 		for (scp = str, len = 0; *scp++; ++len);
-#ifdef DEBUG
 	__CTRACE(__CTRACE_INPUT, "winsnstr: len = %d\n", len);
-#endif /* DEBUG */
 
 	/* move string */
 	end = &win->alines[win->cury]->line[win->curx];
 	if (len < win->maxx - win->curx) {
-#ifdef DEBUG
 		__CTRACE(__CTRACE_INPUT, "winsnstr: shift %d cells\n", len);
-#endif /* DEBUG */
 		temp1 = &win->alines[win->cury]->line[win->maxx - 1];
 		temp2 = temp1 - len;
 		while (temp2 >= end) {
@@ -187,8 +189,10 @@ winsnstr(WINDOW *win, const char *str, int n)
 	{
 		temp1->ch = (wchar_t)*scp & __CHARTEXT;
 		temp1->attr = win->wattr;
+		temp1->cflags &= ~CA_BACKGROUND;
+		temp1->cflags &= ~CA_CONTINUATION;
 #ifdef HAVE_WCHAR
-		SET_WCOL(*temp1, 1);
+		temp1->wcols = 1;
 #endif /* HAVE_WCHAR */
 	}
 #ifdef DEBUG

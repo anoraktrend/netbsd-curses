@@ -26,7 +26,8 @@
  *
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+__RCSID("$NetBSD: internals.c,v 1.17 2013/10/18 19:53:59 christos Exp $");
 
 #include <menu.h>
 #include <ctype.h>
@@ -448,17 +449,21 @@ _menui_draw_item(MENU *menu, int item)
 	if ((menu->items[item]->selected == 1) ||
 	    (((menu->opts & O_ONEVALUE) == O_ONEVALUE) &&
 		(menu->cur_item == item))) {
-		for (j = 0; j < menu->mark.length; j++) {
-			waddch(menu->scrwin,
-			       menu->mark.string[j]);
+		if (menu->mark.string != NULL) {
+			for (j = 0; j < menu->mark.length; j++) {
+				waddch(menu->scrwin,
+				       menu->mark.string[j]);
+			}
 		}
 		  /* blank any length difference between mark & unmark */
 		for (j = menu->mark.length; j < mark_len; j++)
 			waddch(menu->scrwin, ' ');
 	} else {
-		for (j = 0; j < menu->unmark.length; j++) {
-			waddch(menu->scrwin,
-			       menu->unmark.string[j]);
+		if (menu->unmark.string != NULL) {
+			for (j = 0; j < menu->unmark.length; j++) {
+				waddch(menu->scrwin,
+				       menu->unmark.string[j]);
+			}
 		}
 		  /* blank any length difference between mark & unmark */
 		for (j = menu->unmark.length; j < mark_len; j++)

@@ -29,7 +29,8 @@
  *
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+__RCSID("$NetBSD: type_alpha.c,v 1.13 2021/04/13 13:13:04 christos Exp $");
 
 #include <stdlib.h>
 #include <string.h>

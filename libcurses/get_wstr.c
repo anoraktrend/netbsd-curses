@@ -1,4 +1,4 @@
-/*   $NetBSD: get_wstr.c,v 1.8 2019/06/09 07:40:14 blymn Exp $ */
+/*   $NetBSD: get_wstr.c,v 1.12 2024/12/23 02:58:03 blymn Exp $ */
 
 /*
  * Copyright (c) 2005 The NetBSD Foundation Inc.
@@ -34,7 +34,10 @@
  * SUCH DAMAGE.
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+#ifndef lint
+__RCSID("$NetBSD: get_wstr.c,v 1.12 2024/12/23 02:58:03 blymn Exp $");
+#endif						  /* not lint */
 
 #include "curses.h"
 #include "curses_private.h"
@@ -58,7 +61,7 @@ getn_wstr(wchar_t *wstr, int n)
  *	Get a string from stdscr starting at (cury, curx).
  */
 __warn_references(get_wstr,
-	"warning: this program uses get_wstr(), which is unsafe.");
+	"warning: this program uses get_wstr(), which is unsafe.")
 int
 get_wstr(wchar_t *wstr)
 {
@@ -80,7 +83,7 @@ mvgetn_wstr(int y, int x, wchar_t *wstr, int n)
  *	  Get a string from stdscr starting at (y, x).
  */
 __warn_references(mvget_wstr,
-	"warning: this program uses mvget_wstr(), which is unsafe.");
+	"warning: this program uses mvget_wstr(), which is unsafe.")
 int
 mvget_wstr(int y, int x, wchar_t *wstr)
 {
@@ -106,7 +109,7 @@ mvwgetn_wstr(WINDOW *win, int y, int x, wchar_t *wstr, int n)
  *	  Get a string from the given window starting at (y, x).
  */
 __warn_references(mvget_wstr,
-	"warning: this program uses mvget_wstr(), which is unsafe.");
+	"warning: this program uses mvget_wstr(), which is unsafe.")
 int
 mvwget_wstr(WINDOW *win, int y, int x, wchar_t *wstr)
 {
@@ -121,7 +124,7 @@ mvwget_wstr(WINDOW *win, int y, int x, wchar_t *wstr)
  *	Get a string starting at (cury, curx).
  */
 __warn_references(wget_wstr,
-	"warning: this program uses wget_wstr(), which is unsafe.");
+	"warning: this program uses wget_wstr(), which is unsafe.")
 int
 wget_wstr(WINDOW *win, wchar_t *wstr)
 {
@@ -159,12 +162,15 @@ __wgetn_wstr(WINDOW *win, wchar_t *wstr, int n)
 	wint_t wc;
 	cchar_t cc;
 
+	if (__predict_false(win == NULL))
+		return ERR;
+
 	ostr = wstr;
 	if (erasewchar(&ec) == ERR)
 		return ERR;
 	if (killwchar(&kc) == ERR)
 		return ERR;
-	sc[0] = (wchar_t)btowc( ' ' );
+	sc[0] = win->bch;
 	sc[1] = L'\0';
 	setcchar(&cc, sc, win->wattr, 0, NULL);
 	oldx = win->curx;
@@ -172,11 +178,9 @@ __wgetn_wstr(WINDOW *win, wchar_t *wstr, int n)
 
 	while (wget_wch(win, &wc) != ERR
 	       && wc != L'\n' && wc != L'\r') {
-#ifdef DEBUG
 		__CTRACE(__CTRACE_INPUT,
 		    "__wgetn_wstr: win %p, char 0x%x, remain %d\n",
 		    win, wc, remain);
-#endif
 		*wstr = wc;
 		touchline(win, win->cury, 1);
 		if (wc == ec || wc == KEY_BACKSPACE || wc == KEY_LEFT) {

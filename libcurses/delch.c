@@ -1,4 +1,4 @@
-/*	$NetBSD: delch.c,v 1.26 2019/06/09 07:40:14 blymn Exp $	*/
+/*	$NetBSD: delch.c,v 1.31 2024/12/23 02:58:03 blymn Exp $	*/
 
 /*
  * Copyright (c) 1981, 1993, 1994
@@ -29,7 +29,14 @@
  * SUCH DAMAGE.
  */
 
-#include <netbsd_sys/cdefs.h>
+#include <sys/cdefs.h>
+#ifndef lint
+#if 0
+static char sccsid[] = "@(#)delch.c	8.2 (Berkeley) 5/4/94";
+#else
+__RCSID("$NetBSD: delch.c,v 1.31 2024/12/23 02:58:03 blymn Exp $");
+#endif
+#endif				/* not lint */
 
 #include <string.h>
 #include <stdlib.h>
@@ -82,6 +89,9 @@ wdelch(WINDOW *win)
 {
 	__LDATA *end, *temp1, *temp2;
 
+	if (__predict_false(win == NULL))
+		return ERR;
+
 #ifndef HAVE_WCHAR
 	end = &win->alines[win->cury]->line[win->maxx - 1];
 	temp1 = &win->alines[win->cury]->line[win->curx];
@@ -91,6 +101,7 @@ wdelch(WINDOW *win)
 		temp1++, temp2++;
 	}
 	temp1->ch = win->bch;
+	temp1->cflags = CA_BACKGROUND;
 	if (__using_color && win != curscr)
 		temp1->attr = win->battr & __COLOR;
 	else
@@ -104,11 +115,11 @@ wdelch(WINDOW *win)
 	end = &win->alines[win->cury]->line[win->maxx - 1];
 	sx = win->curx;
 	temp1 = &win->alines[win->cury]->line[win->curx];
-	cw = WCOL(*temp1);
+	cw = temp1->wcols;
 	if (cw < 0) {
 		temp1 += cw;
 		sx += cw;
-		cw = WCOL(*temp1);
+		cw = temp1->wcols;
 	}
 	np = temp1->nsp;
 	if (np) {
@@ -127,11 +138,13 @@ wdelch(WINDOW *win)
 		}
 	}
 	while (temp1 <= end) {
-		temp1->ch = ( wchar_t )btowc((int) win->bch);
-		temp1->attr = 0;
+		temp1->ch = win->bch;
+		temp1->cflags |= CA_BACKGROUND;
+		temp1->cflags &= ~CA_CONTINUATION;
+		temp1->attr = win->battr;
 		if (_cursesi_copy_nsp(win->bnsp, temp1) == ERR)
 			return ERR;
-		SET_WCOL(*temp1, 1);
+		temp1->wcols = 1;
 		temp1++;
 	}
 	__touchline(win, (int)win->cury, sx, (int)win->maxx - 1);

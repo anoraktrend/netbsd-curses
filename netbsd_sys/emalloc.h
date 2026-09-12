@@ -3,8 +3,9 @@
 
 /* replacement functions for emalloc() and friends used in netbsd code */
 
-#undef _GNU_SOURCE
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
