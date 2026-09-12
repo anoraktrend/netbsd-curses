@@ -53,10 +53,16 @@ CPPFLAGS+= -D_GNU_SOURCE -D_DEFAULT_SOURCE -D_BSD_SOURCE
 CPPFLAGS+= -DHAVE_SYS_QUEUE_H=1 -DHAVE_SYS_ENDIAN_H=1
 
 # Portable BSD extensions: arc4random, reallocarray etc. are in libbsd on
-# glibc <2.36 and on musl. Prefer pkg-config, fallback to -lbsd if
-# bsd header exists. Only on Linux; BSD/macOS provide them natively.
+# glibc <2.36. On musl we avoid libbsd entirely to silence the linker
+# warning "fgetln() cannot be safely ported, use getline(3)" which is
+# emitted whenever libbsd.so is linked (its .gnu.warning.fgetln is
+# pulled even when fgetln is not used). Our netbsd_sys shims provide
+# the needed BSD functions natively on musl via fallback implementations.
+# Detection: musl via ldd version string (musl ldd reports "musl", glibc reports "GNU libc").
 PKG_CONFIG ?= pkg-config
+MUSL_DETECTED := $(shell ldd --version 2>&1 | grep -qi musl && echo yes)
 ifneq (,$(findstring Linux,$(shell uname -s)))
+ifneq ($(MUSL_DETECTED),yes)
 ifneq (,$(shell $(PKG_CONFIG) --exists libbsd 2>/dev/null && echo yes))
 CPPFLAGS += $(shell $(PKG_CONFIG) --cflags libbsd 2>/dev/null)
 LDFLAGS += $(shell $(PKG_CONFIG) --libs libbsd 2>/dev/null)
@@ -65,6 +71,7 @@ else
 ifneq (,$(wildcard /usr/include/bsd/stdlib.h))
 LDFLAGS += -lbsd
 LDFLAGS_HOST += -lbsd
+endif
 endif
 endif
 endif
@@ -381,7 +388,7 @@ clean:
 	      $(IC_OBJS) infocmp/infocmp $(TA_OBJS) tabs/tabs
 
 $(TOOL_NBPERF): $(NBPERF_OBJS)
-	$(HOSTCC) $(LDFLAGS_HOST) $^ -o $@
+	$(HOSTCC) -o $@ $^ $(LDFLAGS_HOST)
 
 tset/tset: $(TI_LINKLIB)
 tset/tset: $(TS_OBJS)
@@ -421,7 +428,7 @@ tic/%.ho: tic/%.c
 	$(HOSTCC) $(CPPFLAGS) -I./tic -O0 -g0 $(CFLAGS_HOST) -c -o $@ $<
 
 $(TOOL_HOSTTIC): $(TIC_HOBJS)
-	$(HOSTCC) $(LDFLAGS_HOST) $^ -o $@
+	$(HOSTCC) -o $@ $^ $(LDFLAGS_HOST)
 endif
 
 tic/%.o: tic/%.c
@@ -484,7 +491,7 @@ tic/hash.c: libterminfo/hash.c
 	cp libterminfo/hash.c tic/hash.c
 
 $(TOOL_TTIC): $(TIC_OBJS)
-	$(CC) $(LDFLAGS) $^ -o $@
+	$(CC) -o $@ $^ $(LDFLAGS)
 
 TERMINFODIR=./terminfo
 TERMINFO=$(TERMINFODIR)/terminfo

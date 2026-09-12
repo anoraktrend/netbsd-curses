@@ -9,7 +9,14 @@
 
 #if defined(__has_include_next)
 #  if __has_include_next(<sys/cdefs.h>)
+#    if defined(__GNUC__)
+#      pragma GCC diagnostic push
+#      pragma GCC diagnostic ignored "-Wcpp"
+#    endif
 #    include_next <sys/cdefs.h>
+#    if defined(__GNUC__)
+#      pragma GCC diagnostic pop
+#    endif
 #  endif
 #else
 #  error "netbsd_sys/sys/cdefs.h requires a compiler with __has_include_next (GCC >= 3 or Clang). Remove -I netbsd_sys from CPPFLAGS or use a supported compiler."

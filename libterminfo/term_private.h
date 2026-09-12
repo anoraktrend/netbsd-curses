@@ -79,6 +79,9 @@
 #include <sys/types.h>
 #include <assert.h>
 #include <limits.h>
+#ifndef _DIAGASSERT
+#define _DIAGASSERT(x) do { } while (0)
+#endif
 
 #define _TERMINFO
 #define TERMINFO_RTYPE_O1	1

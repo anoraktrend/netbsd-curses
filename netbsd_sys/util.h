@@ -69,11 +69,19 @@
  * logic in netbsd_sys/stdlib.h and ensures the guard below sees
  * LIBBSD_STDLIB_H / PORTABLE_HAVE_BSD_STDLIB_H even for util-first
  * includes.
+ *
+ * On musl (Linux without __GLIBC__) we intentionally avoid libbsd
+ * to silence the fgetln linker warning (.gnu.warning.fgetln in
+ * libbsd.so).  Our fallback implementations are sufficient.
  * ------------------------------------------------------------------ */
 #if defined(__linux__) || defined(__GLIBC__)
+#if defined(__linux__) && !defined(__GLIBC__)
+/* musl: skip libbsd, use fallback */
+#define PORTABLE_MUSL_UTIL 1
+#else
 # if defined(__has_include)
 #  if __has_include(<bsd/stdlib.h>)
-#   if !defined(LIBBSD_STDLIB_H) && !defined(PORTABLE_HAVE_BSD_STDLIB_H) && !defined(__BSD_STDLIB_H)
+#   if !defined(LIBBSD_STDLIB_H) && !defined(PORTABLE_HAVE_BSD_STDLIB_H) && !defined(__BSD_STDLIB_H) && !defined(PORTABLE_MUSL)
 #    include <bsd/stdlib.h>
 #    if defined(LIBBSD_STDLIB_H) || defined(__BSD_STDLIB_H)
 #     define PORTABLE_HAVE_BSD_STDLIB_H 1
@@ -81,6 +89,7 @@
 #   endif
 #  endif
 # endif
+#endif
 #endif
 
 /* Provide getprogname() fallback using glibc's program_invocation_name

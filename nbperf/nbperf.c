@@ -55,8 +55,25 @@ __RCSID("$NetBSD: nbperf.c,v 1.9 2024/09/22 20:34:26 christos Exp $");
  * - Fallback: use random() when neither is available (e.g., no libbsd)
  * netbsd_sys/stdlib.h already handles this for normal builds, but nbperf
  * is a host tool that may be built without the full shim chain, so
- * duplicate the logic here for robustness. */
+ * duplicate the logic here for robustness.
+ *
+ * On musl we deliberately avoid libbsd to silence the fgetln linker
+ * warning (libbsd.so's .gnu.warning.fgetln). Fallback is sufficient. */
 #if defined(__linux__)
+#if !defined(__GLIBC__)
+/* musl: use fallback, do not include libbsd.
+ * If netbsd_sys/stdlib.h was already included (via -I./netbsd_sys),
+ * PORTABLE_MUSL will be defined and arc4random already provided,
+ * so avoid duplicate definition. */
+#  if !defined(PORTABLE_MUSL)
+#   include <stdint.h>
+#   ifndef arc4random
+static inline uint32_t arc4random(void) {
+    return (uint32_t)random();
+}
+#   endif
+#  endif
+#else
 # if defined(__has_include)
 #  if __has_include(<bsd/stdlib.h>)
 #   include <bsd/stdlib.h>
@@ -77,6 +94,30 @@ static inline uint32_t arc4random(void) {
 #   endif
 #  endif
 # endif
+#endif
+#endif
+
+/* getprogname fallback for musl without libbsd.
+ * netbsd_sys/util.h already provides this when PORTABLE_MUSL is set,
+ * but keep a standalone fallback for builds without that shim. */
+#if defined(__linux__) && !defined(__GLIBC__)
+#if !defined(__PORTABLE_GETPROGNAME_DECLARED) && !defined(PORTABLE_MUSL)
+#if !defined(getprogname)
+#include <string.h>
+extern char *program_invocation_short_name;
+extern char *program_invocation_name;
+static inline const char *getprogname(void) {
+    if (program_invocation_short_name && program_invocation_short_name[0])
+        return program_invocation_short_name;
+    if (program_invocation_name && program_invocation_name[0]) {
+        const char *p = program_invocation_name;
+        const char *slash = strrchr(p, '/');
+        return slash ? slash + 1 : p;
+    }
+    return "nbperf";
+}
+#endif
+#endif
 #endif
 
 #include "nbperf.h"
