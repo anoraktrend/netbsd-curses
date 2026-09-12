@@ -720,7 +720,7 @@ main(int argc, char **argv)
 			     _ti_database == NULL ?
 			     "internal database" : _ti_database);
 		/* Strip internal versioning */
-		term = strchr(t->name, TERMINFO_VDELIM);
+		term = (char *)strchr(t->name, TERMINFO_VDELIM);
 		if (term != NULL)
 			*term = '\0';
 		printf("%s", t->name);

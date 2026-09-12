@@ -533,7 +533,7 @@ captoinfo(char *cap)
 		}
 		/* If not matched we may need to convert padding still. */
 		if (nl == 0) {
-			p = strchr(name, '=');
+			p = (char *)strchr(name, '=');
 			if (p != NULL) {
 				val = strval(p);
 				*p = '\0';

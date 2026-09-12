@@ -43,10 +43,31 @@ STATIC_BINS=0
 endif
 
 CFLAGS+=-Werror-implicit-function-declaration
-CPPFLAGS+= -I. -I./libterminfo -I./netbsd_sys
+# Portable shim ordering: -I./netbsd_sys must precede -I. so that
+# include_next in netbsd_sys/stdlib.h correctly finds the system header
+# instead of re-finding the shim via the second -I entry. Host tool
+# nbperf is built with HOSTCC, so keep host flags in sync.
+CPPFLAGS+= -I./netbsd_sys -I. -I./libterminfo
 CPPFLAGS+= -D_GNU_SOURCE -D_DEFAULT_SOURCE -D_BSD_SOURCE
 # Ensure our shims shadow system headers for portability
 CPPFLAGS+= -DHAVE_SYS_QUEUE_H=1 -DHAVE_SYS_ENDIAN_H=1
+
+# Portable BSD extensions: arc4random, reallocarray etc. are in libbsd on
+# glibc <2.36 and on musl. Prefer pkg-config, fallback to -lbsd if
+# bsd header exists. Only on Linux; BSD/macOS provide them natively.
+PKG_CONFIG ?= pkg-config
+ifneq (,$(findstring Linux,$(shell uname -s)))
+ifneq (,$(shell $(PKG_CONFIG) --exists libbsd 2>/dev/null && echo yes))
+CPPFLAGS += $(shell $(PKG_CONFIG) --cflags libbsd 2>/dev/null)
+LDFLAGS += $(shell $(PKG_CONFIG) --libs libbsd 2>/dev/null)
+LDFLAGS_HOST += $(shell $(PKG_CONFIG) --libs libbsd 2>/dev/null)
+else
+ifneq (,$(wildcard /usr/include/bsd/stdlib.h))
+LDFLAGS += -lbsd
+LDFLAGS_HOST += -lbsd
+endif
+endif
+endif
 
 TOOL_NBPERF=	nbperf/nbperf
 NBPERF_SRCS=	nbperf/nbperf.c

@@ -6,10 +6,37 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
-#include <stdlib.h>
-#include <stdio.h>
+/* Avoid recursion through netbsd_sys/stdlib.h wrapper:
+ * use include_next to get the real system header when CPPFLAGS
+ * shadows <stdlib.h> with netbsd_sys/stdlib.h. */
+#if defined(__has_include_next)
+# if __has_include_next(<stdlib.h>)
+#  include_next <stdlib.h>
+# else
+#  include <stdlib.h>
+# endif
+#else
+# include <stdlib.h>
+#endif
+#if defined(__has_include_next)
+# if __has_include_next(<stdio.h>)
+#  include_next <stdio.h>
+# else
+#  include <stdio.h>
+# endif
+#else
+# include <stdio.h>
+#endif
 #include <stdarg.h>
-#include <string.h>
+#if defined(__has_include_next)
+# if __has_include_next(<string.h>)
+#  include_next <string.h>
+# else
+#  include <string.h>
+# endif
+#else
+# include <string.h>
+#endif
 
 static void mallerr(void) {
 	dprintf(2, "error: out of memory\n");
@@ -46,4 +73,3 @@ static int easprintf(char **s, const char *fmt, ...) {
 }
 
 #endif
-

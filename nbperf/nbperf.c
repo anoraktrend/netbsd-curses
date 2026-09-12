@@ -48,6 +48,37 @@ __RCSID("$NetBSD: nbperf.c,v 1.9 2024/09/22 20:34:26 christos Exp $");
 #include <time.h>
 #include <unistd.h>
 
+/* Portable arc4random: BSD extension
+ * - On NetBSD / *BSD: provided by <stdlib.h>
+ * - On Linux glibc >= 2.36 with _DEFAULT_SOURCE: provided by <stdlib.h>
+ * - On Linux musl and glibc < 2.36: provided by libbsd <bsd/stdlib.h>
+ * - Fallback: use random() when neither is available (e.g., no libbsd)
+ * netbsd_sys/stdlib.h already handles this for normal builds, but nbperf
+ * is a host tool that may be built without the full shim chain, so
+ * duplicate the logic here for robustness. */
+#if defined(__linux__)
+# if defined(__has_include)
+#  if __has_include(<bsd/stdlib.h>)
+#   include <bsd/stdlib.h>
+#   define NBPERF_HAVE_BSD_STDLIB_H 1
+#  endif
+# endif
+# if !defined(NBPERF_HAVE_BSD_STDLIB_H)
+#  if !defined(__GLIBC__) || !__GLIBC_PREREQ(2, 36)
+#   include <stdint.h>
+     /* Provide fallback only if arc4random is not already declared.
+      * We cannot test function existence with #ifdef, so guard via
+      * glibc version check – if we are here, system does not provide it
+      * and bsd header was not available. */
+#   ifndef arc4random
+static inline uint32_t arc4random(void) {
+    return (uint32_t)random();
+}
+#   endif
+#  endif
+# endif
+#endif
+
 #include "nbperf.h"
 
 static int predictable;
@@ -63,6 +94,7 @@ void usage(void)
 }
 
 #if HAVE_NBTOOL_CONFIG_H
+#undef arc4random
 #define	arc4random() rand()
 #endif
 

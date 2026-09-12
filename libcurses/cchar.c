@@ -52,7 +52,7 @@ int
 getcchar(const cchar_t *wcval, wchar_t *wch, attr_t *attrs,
          short *color_pair, void *opts)
 {
-	wchar_t *wp;
+	const wchar_t *wp;
 	size_t len;
 
 	if (__predict_false(opts != NULL))

@@ -38,7 +38,7 @@ __RCSID("$NetBSD: tty.c,v 1.51 2024/12/23 02:58:04 blymn Exp $");
 #endif
 #endif				/* not lint */
 
-#include <sys/fcntl.h>
+#include <fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/param.h>
 #include <sys/types.h>

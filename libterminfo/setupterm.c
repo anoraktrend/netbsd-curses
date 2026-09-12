@@ -100,7 +100,7 @@ ti_setupterm(TERMINAL **nterm, const char *term, int fildes, int *errret)
 		reterr(-1, "not enough memory to create terminal structure");
 
 	error = _ti_getterm(*nterm, term, 0);
-	if (error != 1 && (p = strchr(term, '.'))) {
+	if (error != 1 && (p = (char *)strchr(term, '.'))) {
 		term = ++p;
 		/* assert assumption that we don't need to call del_curterm */
 		p = (void*) *nterm;
